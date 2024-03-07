@@ -1,0 +1,614 @@
+openapi: 3.0.0
+info:
+  title: Encrypted websocket
+  version: 1.0.0
+paths:
+  /get:
+    get:
+      summary: Get user
+      parameters:
+        - name: id
+          in: query
+          description: User id
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /all:
+    get:
+      summary: All users
+      parameters:
+        - name: page
+          in: query
+          description: Page
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /update:
+    put:
+      summary: Update user
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+      security:
+        - ApiKeyAuth: [ ]
+
+  /delete:
+    delete:
+      summary: Delete user
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+      security:
+        - ApiKeyAuth: [ ]
+
+  /login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+
+  /register:
+    post:
+      summary: Register
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AuthResponse'
+
+  /chat/get:
+    get:
+      summary: Get websocket
+      parameters:
+        - name: chat_id
+          in: query
+          description: Chat id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Chat'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /chat/all:
+    get:
+      summary: Get chats
+      parameters:
+        - name: page
+          in: query
+          description: Page
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Chat'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /chat/add:
+    post:
+      summary: Add websocket
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+                members:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - name
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Chat'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /chat/update:
+    put:
+      summary: Update websocket
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+                name:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+              required:
+                - chat_id
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Chat'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /chat/delete:
+    delete:
+      summary: Delete websocket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+              required:
+                - chat_id
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+      security:
+        - ApiKeyAuth: [ ]
+
+  /chat/members/all:
+    get:
+      summary: All websocket members
+      parameters:
+        - name: chat_id
+          in: query
+          description: Chat id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /chat/members/add:
+    post:
+      summary: Add websocket member
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+                members:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - chat_id
+                - members
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Member'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /chat/messages/all:
+    get:
+      summary: Get websocket messages all
+      parameters:
+        - name: chat_id
+          in: query
+          description: Chat id
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /chat/messages/add:
+    post:
+      summary: Add websocket message
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+                content:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+                relevance:
+                  type: string
+              required:
+                - chat_id
+                - relevance
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Message'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /search/users:
+    get:
+      summary: Search users
+      parameters:
+        - name: page
+          in: query
+          description: Page
+          required: true
+          schema:
+            type: integer
+        - name: username
+          in: query
+          description: Username
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /search/members:
+    get:
+      summary: Search websocket members
+      parameters:
+        - name: page
+          in: query
+          description: Page
+          required: true
+          schema:
+            type: integer
+        - name: username
+          in: query
+          description: Username
+          required: true
+          schema:
+            type: string
+        - name: chat_id
+          in: query
+          description: Chat id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /search/messages:
+    get:
+      summary: Search websocket members
+      parameters:
+        - name: page
+          in: query
+          description: Page
+          required: true
+          schema:
+            type: integer
+        - name: content
+          in: query
+          description: Content
+          required: true
+          schema:
+            type: string
+        - name: chat_id
+          in: query
+          description: Chat id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /search/chats:
+    get:
+      summary: Search websocket members
+      parameters:
+        - name: page
+          in: query
+          description: Page
+          required: true
+          schema:
+            type: integer
+        - name: name
+          in: query
+          description: Chat name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Chat'
+      security:
+        - ApiKeyAuth: [ ]
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Auth
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        id:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        image:
+          type: string
+
+    Chat:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        image:
+          type: string
+        owner_id:
+          type: string
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        file:
+          type: string
+        user_id:
+          type: string
+        chat_id:
+          type: string
+
+    Member:
+      type: object
+      properties:
+        chat_id:
+          type: string
+        user_id:
+          type: string
