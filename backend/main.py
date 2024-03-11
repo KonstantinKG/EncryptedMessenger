@@ -51,16 +51,6 @@ search_controller = SearchController(
 
 app = web.Application()
 
-cors = aiohttp_cors.setup(
-    app=app,
-    defaults={
-        "*": aiohttp_cors.ResourceOptions(
-            allow_credentials=True,
-            expose_headers="*",
-            allow_headers="*",
-        )
-    })
-
 
 async def get(request):
     response = await user_controller.get(request=request)
@@ -180,6 +170,19 @@ app.router.add_get('/search/chats', search_chats)
 app.router.add_get('/search/messages', search_messages)
 
 setup_swagger(app, swagger_url="/api/documentation", swagger_from_file="swagger.yaml", ui_version=3)
+
+cors = aiohttp_cors.setup(
+    app=app,
+    defaults={
+        "*": aiohttp_cors.ResourceOptions(
+            allow_credentials=True,
+            expose_headers="*",
+            allow_headers="*",
+        )
+    })
+
+for route in list(app.router.routes()):
+    cors.add(route)
 
 if __name__ == '__main__':
     if (
