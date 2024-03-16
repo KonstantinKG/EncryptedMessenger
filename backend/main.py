@@ -49,7 +49,7 @@ search_controller = SearchController(
     db=database
 )
 
-app = web.Application()
+app = web.Application(client_max_size=536870912)
 
 
 async def get(request):
@@ -117,6 +117,11 @@ async def chat_members_add(request):
     return web.json_response(response.out(), status=response.status)
 
 
+async def chat_members_delete(request):
+    response = await chat_controller.members_delete(request=request)
+    return web.json_response(response.out(), status=response.status)
+
+
 async def chat_messages_all(request):
     response = await chat_controller.messages_all(request=request)
     return web.json_response(response.out(), status=response.status)
@@ -147,27 +152,29 @@ async def search_messages(request):
     return web.json_response(response.out(), status=response.status)
 
 
-app.router.add_get('/get', get)
-app.router.add_get('/all', all)
-app.router.add_put('/update', update)
-app.router.add_delete('/delete', delete)
-app.router.add_post('/login', login)
-app.router.add_post('/register', register)
+app.router.add_get('/user', get)
+app.router.add_get('/user/all', all)
+app.router.add_put('/user', update)
+app.router.add_delete('/user', delete)
+app.router.add_post('/auth/login', login)
+app.router.add_post('/auth/register', register)
 
-app.router.add_get('/chat/get', chat_get)
+app.router.add_get('/chat', chat_get)
 app.router.add_get('/chat/all', chat_all)
-app.router.add_post('/chat/add', chat_add)
-app.router.add_put('/chat/update', chat_update)
-app.router.add_delete('/chat/delete', chat_delete)
-app.router.add_get('/chat/members/all', chat_members_all)
-app.router.add_post('/chat/members/add', chat_members_add)
-app.router.add_get('/chat/messages/all', chat_messages_all)
-app.router.add_post('/chat/messages/add', chat_messages_add)
+app.router.add_post('/chat', chat_add)
+app.router.add_put('/chat', chat_update)
+app.router.add_delete('/chat', chat_delete)
+app.router.add_get('/chat/member/all', chat_members_all)
+app.router.add_post('/chat/member', chat_members_add)
+app.router.add_delete('/chat/member', chat_members_delete)
+app.router.add_get('/chat/message/all', chat_messages_all)
+app.router.add_post('/chat/message', chat_messages_add)
 
 app.router.add_get('/search/users', search_users)
 app.router.add_get('/search/members', search_members)
 app.router.add_get('/search/chats', search_chats)
 app.router.add_get('/search/messages', search_messages)
+
 
 setup_swagger(app, swagger_url="/api/documentation", swagger_from_file="swagger.yaml", ui_version=3)
 

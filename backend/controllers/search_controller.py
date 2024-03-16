@@ -30,7 +30,8 @@ class SearchController(BaseController):
 
             users = await self._db.search_users(query=username, offset=offset, limit=limit)
             return Response(data={
-                "total": pages,
+                "total": total,
+                "pages": pages,
                 "current": page,
                 "data": [
                     {
@@ -61,7 +62,8 @@ class SearchController(BaseController):
 
             users = await self._db.search_members(chat_id=chat_id, query=username, offset=offset, limit=limit)
             return Response(data={
-                "total": pages,
+                "total": total,
+                "pages": pages,
                 "current": page,
                 "data": [
                     {
@@ -93,7 +95,8 @@ class SearchController(BaseController):
             messages = await self._db.search_messages(chat_id=chat_id, query=content, offset=offset, limit=limit)
 
             return Response(data={
-                "total": pages,
+                "total": total,
+                "pages": pages,
                 "current": page,
                 "data": [
                     {
@@ -126,7 +129,8 @@ class SearchController(BaseController):
 
             chats = await self._db.search_chats(query=name, offset=offset, limit=limit)
             return Response(data={
-                "total": pages,
+                "total": total,
+                "pages": pages,
                 "current": page,
                 "data": [
                     {

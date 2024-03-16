@@ -54,7 +54,8 @@ class ChatController(BaseController):
 
             chats = await self._db.get_chats(user_id=user_id, offset=offset, limit=limit)
             return Response(data={
-                "total": pages,
+                "total": total,
+                "pages": pages,
                 "current": page,
                 "data": [
                     {
@@ -149,8 +150,7 @@ class ChatController(BaseController):
             if not user_id:
                 return Response(errors=["Войдите в аккаунт"], status=401)
 
-            data = await request.json()
-            chat_id = data.get("chat_id")
+            chat_id = request.query.get("id")
 
             chat = await self._db.get_chat(id=chat_id, user_id=user_id)
             if not chat:
@@ -224,6 +224,30 @@ class ChatController(BaseController):
             self._logger.error(f"{e} {traceback.format_exc()}")
             return Response(errors=["Не удалось создать чат"], status=500)
 
+    async def members_delete(self, request: Request) -> Response:
+        try:
+            user_id = request.headers.get("X-Auth")
+            if not user_id:
+                return Response(errors=["Войдите в аккаунт"], status=401)
+
+            data = await request.json()
+            chat_id = data.get("chat_id")
+            members_ids = data.get("members")
+
+            chat = await self._db.get_chat(id=chat_id, user_id=user_id)
+            if not chat:
+                return Response(errors=["Не удалось найти чат"], status=404)
+
+            if chat.owner_id != user_id:
+                return Response(errors=["Вы не являетесь создателем чата"], status=403)
+
+            await self._db.delete_members(chat_id=chat_id, members=members_ids)
+            return Response(data="Пользовател(ь/и) успешно удален(ы)")
+
+        except Exception as e:
+            self._logger.error(f"{e} {traceback.format_exc()}")
+            return Response(errors=["Не удалось удалить пользователей"], status=500)
+
     async def messages_all(self, request: Request) -> Response:
         try:
             user_id = request.headers.get("X-Auth")
@@ -245,7 +269,8 @@ class ChatController(BaseController):
             messages = await self._db.get_chat_messages(chat_id=chat_id, offset=offset, limit=limit)
 
             return Response(data={
-                "total": pages,
+                "total": total,
+                "pages": pages,
                 "current": page,
                 "data": [
                     {

@@ -48,7 +48,8 @@ class UserController(BaseController):
 
             users = await self._db.get_users(offset=offset, limit=limit)
             return Response(data={
-                "total": pages,
+                "total": total,
+                "pages": pages,
                 "current": page,
                 "data": [
                     {
@@ -72,7 +73,10 @@ class UserController(BaseController):
             image = data.get("image")
 
             user = await self._db.get_user(id=user_id)
-            if user.username != username:
+            if not user:
+                return Response(errors=["Пользователь не найден"], status=404)
+
+            if username and user.username != username:
                 if await self._db.is_username_taken(username=username):
                     return Response(errors=["Имя пользователя занято"], status=409)
                 user.username = username
@@ -82,10 +86,14 @@ class UserController(BaseController):
                 user.image = image
 
             await self._db.update(model=user)
-            return Response(data="Пользователь удален успешно")
+            return Response(data={
+                "id": user.id,
+                "username": user.username,
+                "image": user.image
+            })
         except Exception as e:
             self._logger.error(f"{e} {traceback.format_exc()}")
-            return Response(errors=["Не удалось удалить пользователя"], status=500)
+            return Response(errors=["Не удалось обновить пользователя"], status=500)
 
     async def delete(self, request: Request) -> Response:
         try:

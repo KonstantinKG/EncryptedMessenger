@@ -3,7 +3,7 @@ info:
   title: Encrypted websocket
   version: 1.0.0
 paths:
-  /get:
+  /user:
     get:
       summary: Get user
       parameters:
@@ -25,8 +25,48 @@ paths:
                     $ref: '#/components/schemas/User'
       security:
         - ApiKeyAuth: [ ]
+    put:
+      summary: Update user
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+      security:
+        - ApiKeyAuth: [ ]
+    delete:
+      summary: Delete user
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+      security:
+        - ApiKeyAuth: [ ]
 
-  /all:
+  /user/all:
     get:
       summary: All users
       parameters:
@@ -45,63 +85,17 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/User'
+                    $ref: '#/components/schemas/UserAllResponse'
       security:
         - ApiKeyAuth: [ ]
 
-  /update:
-    put:
-      summary: Update user
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                image:
-                  type: string
-                  format: binary
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
-      security:
-        - ApiKeyAuth: [ ]
-
-  /delete:
-    delete:
-      summary: Delete user
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
-      security:
-        - ApiKeyAuth: [ ]
-
-  /login:
+  /auth/login:
     post:
       summary: Login
       requestBody:
         required: true
         content:
-          application/x-www-form-urlencoded:
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -123,7 +117,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/User'
 
-  /register:
+  /auth/register:
     post:
       summary: Register
       requestBody:
@@ -154,9 +148,9 @@ paths:
                   data:
                     $ref: '#/components/schemas/AuthResponse'
 
-  /chat/get:
+  /chat:
     get:
-      summary: Get websocket
+      summary: Get chat
       parameters:
         - name: chat_id
           in: query
@@ -176,35 +170,8 @@ paths:
                     $ref: '#/components/schemas/Chat'
       security:
         - ApiKeyAuth: [ ]
-
-  /chat/all:
-    get:
-      summary: Get chats
-      parameters:
-        - name: page
-          in: query
-          description: Page
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Chat'
-      security:
-        - ApiKeyAuth: [ ]
-
-  /chat/add:
     post:
-      summary: Add websocket
+      summary: Add chat
       requestBody:
         required: true
         content:
@@ -235,10 +202,8 @@ paths:
                     $ref: '#/components/schemas/Chat'
       security:
         - ApiKeyAuth: [ ]
-
-  /chat/update:
     put:
-      summary: Update websocket
+      summary: Update chat
       requestBody:
         required: true
         content:
@@ -267,21 +232,15 @@ paths:
                     $ref: '#/components/schemas/Chat'
       security:
         - ApiKeyAuth: [ ]
-
-  /chat/delete:
     delete:
-      summary: Delete websocket
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                chat_id:
-                  type: string
-              required:
-                - chat_id
+      summary: Delete chat
+      parameters:
+        - name: id
+          in: query
+          description: Chat id
+          required: true
+          schema:
+            type: integer
       responses:
         '200':
           description: Successful response
@@ -295,9 +254,32 @@ paths:
       security:
         - ApiKeyAuth: [ ]
 
-  /chat/members/all:
+  /chat/all:
     get:
-      summary: All websocket members
+      summary: Get chats
+      parameters:
+        - name: page
+          in: query
+          description: Page
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ChatAllResponse'
+      security:
+        - ApiKeyAuth: [ ]
+
+  /chat/member/all:
+    get:
+      summary: All chat members
       parameters:
         - name: chat_id
           in: query
@@ -314,15 +296,13 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/User'
+                    $ref: '#/components/schemas/UserAllResponse'
       security:
         - ApiKeyAuth: [ ]
 
-  /chat/members/add:
+  /chat/member:
     post:
-      summary: Add websocket member
+      summary: Add chat member
       requestBody:
         required: true
         content:
@@ -354,9 +334,40 @@ paths:
       security:
         - ApiKeyAuth: [ ]
 
-  /chat/messages/all:
+    delete:
+      summary: Delete chat members by user ids
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+                members:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - chat_id
+                - members
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+      security:
+        - ApiKeyAuth: [ ]
+
+  /chat/message/all:
     get:
-      summary: Get websocket messages all
+      summary: Get all chat messages
       parameters:
         - name: chat_id
           in: query
@@ -379,15 +390,13 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Message'
+                    $ref: '#/components/schemas/ChatMessageAllResponse'
       security:
         - ApiKeyAuth: [ ]
 
-  /chat/messages/add:
+  /chat/message:
     post:
-      summary: Add websocket message
+      summary: Add chat message
       requestBody:
         required: true
         content:
@@ -445,9 +454,7 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/User'
+                    $ref: '#/components/schemas/UserAllResponse'
       security:
         - ApiKeyAuth: [ ]
 
@@ -482,9 +489,7 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/User'
+                    $ref: '#/components/schemas/UserAllResponse'
       security:
         - ApiKeyAuth: [ ]
 
@@ -519,9 +524,7 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Message'
+                    $ref: '#/components/schemas/ChatMessageAllResponse'
       security:
         - ApiKeyAuth: [ ]
 
@@ -550,9 +553,7 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Chat'
+                    $ref: '#/components/schemas/ChatAllResponse'
       security:
         - ApiKeyAuth: [ ]
 
@@ -563,6 +564,21 @@ components:
       in: header
       name: X-Auth
   schemas:
+
+    UserAllResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        pages:
+          type: integer
+        current:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+
     AuthResponse:
       type: object
       properties:
@@ -579,6 +595,20 @@ components:
         image:
           type: string
 
+    ChatAllResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        pages:
+          type: integer
+        current:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Chat'
+
     Chat:
       type: object
       properties:
@@ -590,6 +620,21 @@ components:
           type: string
         owner_id:
           type: string
+
+
+    ChatMessageAllResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        pages:
+          type: integer
+        current:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
 
     Message:
       type: object

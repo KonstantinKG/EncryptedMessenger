@@ -95,6 +95,19 @@ class Database:
         conn = await self.create_connection()
         await conn.execute(query)
 
+    async def delete_many(self, models):
+        model = models[0]
+        model_ids = ", ".join([model.__dict__.get(model.PK) for model in models])
+        query = f'''DELETE FROM {model.TABLE} WHERE id in ({model_ids});'''
+        conn = await self.create_connection()
+        await conn.execute(query)
+
+    async def delete_members(self, chat_id: str, members: list):
+        model_ids = ", ".join(members)
+        query = f'''DELETE FROM {Member.TABLE} WHERE chat_id = '{chat_id}' AND user_id in ('{model_ids}');'''
+        conn = await self.create_connection()
+        await conn.execute(query)
+
     async def get_chat(self, id: str, user_id: str) -> User or None:
         query = f'''
             SELECT
