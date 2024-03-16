@@ -17,25 +17,25 @@ declare module '@vue/runtime-core' {
 // for each client)
 const api = axios.create({ baseURL: import.meta.env.VITE_BACKEND_URL })
 
-// api.interceptors.request.use((config) => {
-//   const idAccess = Cookies.get('id_access')
-//   if (idAccess) {
-//     config.headers['X-Auth'] = idAccess
-//   }
-//   return config
-// })
-//
-// api.interceptors.response.use(
-//   (res) => {
-//     return res
-//   },
-//     (error) => {
-//     if (error === 401) {
-//       Cookies.remove('id_access')
-//     }
-//       return Promise.reject(error)
-//     }
-// )
+api.interceptors.request.use((config) => {
+  const idAccess = Cookies.get('id_access')
+  if (idAccess) {
+    config.headers['X-Auth'] = idAccess
+  }
+  return config
+})
+
+api.interceptors.response.use(
+  (response) => {
+    return response
+  },
+  (error) => {
+    if (error === 401) {
+      Cookies.remove('id_access')
+    }
+    return Promise.reject(error)
+  }
+)
 
 export default boot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
