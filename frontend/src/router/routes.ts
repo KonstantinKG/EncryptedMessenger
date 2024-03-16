@@ -3,26 +3,35 @@ import { RouteRecordRaw } from 'vue-router'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    // component: () => import('layouts/MainLayout.vue'),
-    redirect: '/register',
+    redirect: '/chat/1'
+    // children: [{ path: '', component: () => import('pages/IndexPage.vue') }]
+  },
+
+  {
+    path: '/chats',
+    component: () => import('pages/chats.vue'),
+    // children: [{ path: '', component: () => import('pages/IndexPage.vue') }]
+  },
+
+  {
+    path: '/chat/:id',
+    component: () => import('pages/chat.vue'),
     // children: [{ path: '', component: () => import('pages/IndexPage.vue') }]
   },
 
   {
     path: '/login',
-    component: () => import('pages/login.vue'),
+    component: () => import('pages/login.vue')
   },
 
   {
     path: '/register',
-    component: () => import('pages/register.vue'),
+    component: () => import('pages/register.vue')
   },
 
-  // Always leave this as last one,
-  // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue')
+    component: () => import('pages/error-page.vue')
   }
 ]
 
