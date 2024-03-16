@@ -8,7 +8,7 @@
       "user": "postgres",
       "password": "12345",
       "host": "db",
-      "port": "4523",
+      "port": "5432",
       "database": "postgres",
       "schema": "public"
     },
