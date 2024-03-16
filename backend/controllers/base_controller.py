@@ -17,7 +17,12 @@ class BaseController:
     async def save_file(self, user_id, file):
         try:
             base_dir = self._config["base_dir"]
-            save_directory = str(os.path.join(base_dir, self._config["files"], user_id))
+
+            files_directory = str(os.path.join(base_dir, self._config["files"]))
+            os.makedirs(files_directory, exist_ok=True)
+
+            save_directory = str(os.path.join(files_directory, user_id))
+            os.makedirs(save_directory, exist_ok=True)
 
             os.makedirs(save_directory, exist_ok=True)
             file_path = os.path.join(save_directory, file.filename)

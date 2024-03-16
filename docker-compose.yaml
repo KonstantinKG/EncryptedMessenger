@@ -23,6 +23,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8200:8200
+    volumes:
+      - ./files:/files
     restart: on-failure
 
   websocket:
