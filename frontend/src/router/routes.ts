@@ -3,7 +3,8 @@ import { RouteRecordRaw } from 'vue-router'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/chat/1'
+    // component: () => import('layouts/default.vue'),
+    redirect: '/login',
     // children: [{ path: '', component: () => import('pages/IndexPage.vue') }]
   },
 

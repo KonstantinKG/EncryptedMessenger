@@ -24,27 +24,27 @@ class EncryptedMessengerService {
   getData = <T>(response: AxiosResponse<T>) => response.data
 
   async register(params: Register): PromiseResponse<any> {
-    return await api.post('/register', params).then(this.getData)
+    return await api.post('/auth/register', params).then(this.getData)
   }
 
   async login(params: Login): PromiseResponse<any> {
-    return await api.post('/login', params).then(this.getData)
+    return await api.post('/auth/login', params).then(this.getData)
   }
 
   async update(params: SelfUpdate): PromiseResponse<any> {
-    return await api.put('/update', params).then(this.getData)
+    return await api.put('/user', params).then(this.getData)
   }
 
   async delete(): PromiseResponse<any> {
-    return await api.delete('/delete').then(this.getData)
+    return await api.delete('/user').then(this.getData)
   }
 
   async getUser(id: string): PromiseResponse<any> {
-    return await api.get('/get', { params: { id } }).then(this.getData)
+    return await api.get('/user', { params: { id } }).then(this.getData)
   }
 
-  async getAll(page: number): PromiseResponse<any> {
-    return await api.get('/all', { params: { page } }).then(this.getData)
+  async getAllUsers(page: number): PromiseResponse<any> {
+    return await api.get('/user/all', { params: { page } }).then(this.getData)
   }
 
   async getChat(chat_id: string): PromiseResponse<any> {
