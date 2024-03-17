@@ -9,7 +9,8 @@ from aiohttp import web
 from aiohttp_swagger import setup_swagger
 
 from controllers import AuthController, UserController, ChatController, SearchController
-from helpers import Database, WsClient
+from helpers import Database, WsClient, KeyGenerator
+
 
 with open("config.json", 'r', encoding='utf-8') as file:
     config = json.load(file)
@@ -21,13 +22,15 @@ logging.config.dictConfig(config=config["logger"])
 logger = logging.getLogger(name=config["app"])
 
 database = Database(config=config, logger=logger)
+key_generator = KeyGenerator()
 
 ws_client = WsClient(config=config, logger=logger)
 
 auth_controller = AuthController(
     config=config,
     logger=logger,
-    db=database
+    db=database,
+    key_generator=key_generator
 )
 
 user_controller = UserController(
@@ -40,7 +43,8 @@ chat_controller = ChatController(
     config=config,
     logger=logger,
     db=database,
-    ws_client=ws_client
+    ws_client=ws_client,
+    key_generator=key_generator
 )
 
 search_controller = SearchController(
