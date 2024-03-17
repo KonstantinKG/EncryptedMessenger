@@ -6,13 +6,14 @@ import bcrypt
 from aiohttp.web_request import Request
 
 from controllers.base_controller import BaseController
-from helpers import Database
+from helpers import Database, KeyGenerator
 from models import User
 from models.Reponse import Response
 
 
 class AuthController(BaseController):
-    def __init__(self, config: dict, logger: Logger, db: Database):
+    def __init__(self, config: dict, logger: Logger, db: Database, key_generator: KeyGenerator):
+        self.key_generator = key_generator
         super().__init__(config, logger, db)
 
     async def login(self, request: Request) -> Response:
@@ -29,7 +30,7 @@ class AuthController(BaseController):
             if not bcrypt.checkpw(password.encode("utf-8"), user.password.encode("utf-8")):
                 return Response(errors=["Некоректный логин или пароль"], status=400)
 
-            return Response(data={"id": user.id})
+            return Response(data={"id": user.id, "key": str(self.key_generator.key)})
 
         except Exception as e:
             self._logger.error(f"{e} {traceback.format_exc()}")
@@ -55,7 +56,7 @@ class AuthController(BaseController):
 
             user = User(id=id, username=username, image=image, password=password)
             await self._db.insert(models=[user])
-            return Response(data={"id": user.id})
+            return Response(data={"id": user.id, "key": str(self.key_generator.key)})
 
         except Exception as e:
             self._logger.error(f"{e} {traceback.format_exc()}")

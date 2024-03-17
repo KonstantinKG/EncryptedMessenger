@@ -3,16 +3,18 @@ import uuid
 from logging import Logger
 
 from aiohttp.web_request import Request
+from cryptography.fernet import Fernet
 from dateutil.parser import parse
 
 from controllers.base_controller import BaseController
-from helpers import Database, WsClient
+from helpers import Database, WsClient, KeyGenerator
 from models import Chat, Message, Member
 from models.Reponse import Response
 
 
 class ChatController(BaseController):
-    def __init__(self, config: dict, logger: Logger, db: Database, ws_client: WsClient):
+    def __init__(self, config: dict, logger: Logger, db: Database, ws_client: WsClient,key_generator: KeyGenerator):
+        self.key_generator = key_generator
         self._ws_client = ws_client
         super().__init__(config, logger, db)
 
@@ -288,11 +290,22 @@ class ChatController(BaseController):
 
     async def message_add(self, request: Request) -> Response:
         try:
+
             user_id = request.headers.get("X-Auth")
             if not user_id:
                 return Response(errors=["Войдите в аккаунт"], status=401)
 
+            cipher_suite = Fernet(self.key_generator.key)
             data = await request.post()
+            try:
+                self._logger.info(f"Decrypting chat message content")
+                cipher_suite.decrypt(str(data).encode("utf-8"))
+            except UnicodeDecodeError as e:
+                self._logger.error(f"{e} {traceback.format_exc()}")
+            except Exception:
+                print(f"")
+            finally:
+                self._logger.info(f"Decrypted chat message succesfully")
 
             chat_id = data.get("chat_id")
             users = await self._db.get_chat_users(chat_id=chat_id)
@@ -319,6 +332,10 @@ class ChatController(BaseController):
                 "chat_id": message.chat_id,
                 "relevance": str(message.relevance)
             }
+
+            self._logger.info(f"Encrypting chat message content")
+            cipher_suite.encrypt(str(data).encode("utf-8"))
+            self._logger.info("Encrypted message " + str(cipher_suite.encrypt(str(data).encode("utf-8"))))
 
             await self._ws_client.send(event="message_added", data=data, receivers=receivers)
             return Response(data=data)
