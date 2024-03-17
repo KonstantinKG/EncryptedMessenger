@@ -18,3 +18,15 @@ a {
   background-color: $primary;
   border-radius: 10px;
 }
+
+.bg-main {
+  background-color: $main !important;
+}
+
+.bg-main-secondary {
+  background-color: $main-secondary !important;
+}
+
+.bg-main-dark {
+  background-color: $main-dark !important;
+}

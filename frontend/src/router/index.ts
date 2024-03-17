@@ -5,6 +5,7 @@ import {
   createWebHashHistory,
   createWebHistory
 } from 'vue-router'
+// import { Cookies } from "quasar";
 
 import routes from './routes'
 
@@ -33,6 +34,14 @@ export default route(function (/* { store, ssrContext } */) {
     // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
+
+  // Router.beforeEach((to, from, next) => {
+  //   if (Cookies.get('id_access')) {
+  //     next({ name: 'account-signin', query: { next: to.fullPath } })
+  //   } else {
+  //     next()
+  //   }
+  // })
 
   return Router
 })

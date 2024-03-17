@@ -1,8 +1,8 @@
 <template>
-  <div class="WAL position-relative bg-grey-4" :style="style">
+  <div class="WAL position-relative bg-main" :style="style">
     <q-layout view="lHh Lpr lFf" class="WAL__layout shadow-3" container>
       <q-header elevated>
-        <q-toolbar class="bg-grey-3 text-black">
+        <q-toolbar class="bg-main-secondary text-black">
           <q-btn
             round
             flat
@@ -13,7 +13,7 @@
 
           <q-btn round flat>
             <q-avatar>
-              <img :src="currentConversation.avatar">
+              <img :src="currentConversation.avatar" />
             </q-avatar>
           </q-btn>
 
@@ -21,7 +21,7 @@
             {{ currentConversation.person }}
           </span>
 
-          <q-space/>
+          <q-space />
 
           <q-btn round flat icon="search" />
           <q-btn round flat>
@@ -54,13 +54,8 @@
         </q-toolbar>
       </q-header>
 
-      <q-drawer
-        v-model="leftDrawerOpen"
-        show-if-above
-        bordered
-        :breakpoint="690"
-      >
-        <q-toolbar class="bg-grey-3">
+      <q-drawer v-model="leftDrawerOpen" show-if-above bordered :breakpoint="690">
+        <q-toolbar class="bg-blue-10">
           <q-avatar class="cursor-pointer">
             <img src="https://cdn.quasar.dev/logo-v2/svg/logo.svg" />
           </q-avatar>
@@ -93,18 +88,20 @@
             </q-menu>
           </q-btn>
 
-          <q-btn
-            round
-            flat
-            icon="close"
-            class="WAL__drawer-close"
-            @click="toggleLeftDrawer"
-          />
+          <q-btn round flat icon="close" class="WAL__drawer-close" @click="toggleLeftDrawer" />
         </q-toolbar>
 
-        <q-toolbar class="bg-grey-2">
-          <q-input rounded outlined dense class="WAL__field full-width" bg-color="white" v-model="search" placeholder="Search or start a new conversation">
-            <template v-slot:prepend>
+        <q-toolbar class="bg-blue-10">
+          <q-input
+            v-model="search"
+            rounded
+            outlined
+            dense
+            class="WAL__field full-width"
+            bg-color="white"
+            placeholder="Search or start a new conversation"
+          >
+            <template #prepend>
               <q-icon name="search" />
             </template>
           </q-input>
@@ -115,13 +112,13 @@
             <q-item
               v-for="(conversation, index) in conversations"
               :key="conversation.id"
-              clickable
               v-ripple
+              clickable
               @click="setCurrentConversation(index)"
             >
               <q-item-section avatar>
                 <q-avatar>
-                  <img :src="conversation.avatar">
+                  <img :src="conversation.avatar" />
                 </q-avatar>
               </q-item-section>
 
@@ -130,8 +127,8 @@
                   {{ conversation.person }}
                 </q-item-label>
                 <q-item-label class="conversation__summary" caption>
-                  <q-icon name="check" v-if="conversation.sent" />
-                  <q-icon name="not_interested" v-if="conversation.deleted" />
+                  <q-icon v-if="conversation.sent" name="check" />
+                  <q-icon v-if="conversation.deleted" name="not_interested" />
                   {{ conversation.caption }}
                 </q-item-label>
               </q-item-section>
@@ -147,17 +144,23 @@
         </q-scroll-area>
       </q-drawer>
 
-      <q-page-container class="bg-grey-2">
+      <q-page-container class="bg-blue-10">
         <router-view />
       </q-page-container>
 
-      <q-footer>
-        <q-toolbar class="bg-grey-3 text-black row">
-          <q-btn round flat icon="insert_emoticon" class="q-mr-sm" />
-          <q-input rounded outlined dense class="WAL__field col-grow q-mr-sm" bg-color="white" v-model="message" placeholder="Type a message" />
-          <q-btn round flat icon="mic" />
-        </q-toolbar>
-      </q-footer>
+<!--      <q-footer>-->
+<!--        <q-toolbar class="bg-main-secondary text-black row">-->
+<!--          <q-input-->
+<!--            v-model="message"-->
+<!--            rounded-->
+<!--            outlined-->
+<!--            dense-->
+<!--            class="WAL__field col-grow q-mr-sm"-->
+<!--            bg-color="main"-->
+<!--            placeholder="Введите сообщение"-->
+<!--          />-->
+<!--        </q-toolbar>-->
+<!--      </q-footer>-->
     </q-layout>
   </div>
 </template>
@@ -171,7 +174,7 @@ const conversations = [
     id: 1,
     person: 'Razvan Stoenescu',
     avatar: 'https://cdn.quasar.dev/team/razvan_stoenescu.jpeg',
-    caption: 'I\'m working on Quasar!',
+    caption: "I'm working on Quasar!",
     time: '15:00',
     sent: true
   },
@@ -179,7 +182,7 @@ const conversations = [
     id: 2,
     person: 'Dan Popescu',
     avatar: 'https://cdn.quasar.dev/team/dan_popescu.jpg',
-    caption: 'I\'m working on Quasar!',
+    caption: "I'm working on Quasar!",
     time: '16:00',
     sent: true
   },
@@ -187,7 +190,7 @@ const conversations = [
     id: 3,
     person: 'Jeff Galbraith',
     avatar: 'https://cdn.quasar.dev/team/jeff_galbraith.jpg',
-    caption: 'I\'m working on Quasar!',
+    caption: "I'm working on Quasar!",
     time: '18:00',
     sent: true
   },
@@ -195,7 +198,7 @@ const conversations = [
     id: 4,
     person: 'Allan Gaunt',
     avatar: 'https://cdn.quasar.dev/team/allan_gaunt.png',
-    caption: 'I\'m working on Quasar!',
+    caption: "I'm working on Quasar!",
     time: '17:00',
     sent: true
   }
@@ -204,7 +207,7 @@ const conversations = [
 export default {
   name: 'WhatsappLayout',
 
-  setup () {
+  setup() {
     const $q = useQuasar()
 
     const leftDrawerOpen = ref(false)
@@ -213,18 +216,18 @@ export default {
     const currentConversationIndex = ref(0)
 
     const currentConversation = computed(() => {
-      return conversations[ currentConversationIndex.value ]
+      return conversations[currentConversationIndex.value]
     })
 
     const style = computed(() => ({
       height: $q.screen.height + 'px'
     }))
 
-    function toggleLeftDrawer () {
+    function toggleLeftDrawer() {
       leftDrawerOpen.value = !leftDrawerOpen.value
     }
 
-    function setCurrentConversation (index) {
+    function setCurrentConversation(index) {
       currentConversationIndex.value = index
     }
 
@@ -251,6 +254,7 @@ export default {
   height: 100%
   padding-top: 20px
   padding-bottom: 20px
+  background-color: $light-blue-10
 
   &:before
     content: ''
@@ -258,7 +262,7 @@ export default {
     position: fixed
     top: 0
     width: 100%
-    background-color: #009688
+    background-color: $main-dark
 
   &__layout
     margin: 0 auto
@@ -278,6 +282,7 @@ export default {
 @media (max-width: 850px)
   .WAL
     padding: 0
+
     &__layout
       width: 100%
       border-radius: 0
@@ -291,6 +296,6 @@ export default {
   margin-top: 4px
 
 .conversation__more
-  margin-top: 0!important
+  margin-top: 0 !important
   font-size: 1.4rem
 </style>

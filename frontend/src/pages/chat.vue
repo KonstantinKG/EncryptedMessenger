@@ -33,39 +33,41 @@ function sendMessage() {
 </script>
 
 <template>
-  <div class="chat">
-    <div class="container">
-      <div class="chat__messages scroll">
-        <q-chat-message>
-          <template #label>
-            <q-badge label="16 марта" color="dark" />
-          </template>
-        </q-chat-message>
-        <q-chat-message
-          v-for="(msg, index) in messages"
-          :key="index"
-          :sent="msg.sent"
-          :text="msg.text"
-          :stamp="msg.stamps"
-          :name="msg.name"
-          :avatar="msg.avatar"
-          :bg-color="msg.sent ? 'amber-7' : 'primary'"
-          text-color="white"
+  <q-page>
+    <div class="chat">
+      <div class="container">
+        <div class="chat__messages scroll">
+          <q-chat-message>
+            <template #label>
+              <q-badge label="16 марта" color="dark" />
+            </template>
+          </q-chat-message>
+          <q-chat-message
+            v-for="(msg, index) in messages"
+            :key="index"
+            :sent="msg.sent"
+            :text="msg.text"
+            :stamp="msg.stamps"
+            :name="msg.name"
+            :avatar="msg.avatar"
+            :bg-color="msg.sent ? 'amber-7' : 'primary'"
+            text-color="white"
+          />
+          <!--        <div class="absolute-bottom">-->
+          <!--          <q-fab color="deep-orange" icon="keyboard_arrow_down" direction="down" />-->
+          <!--        </div>-->
+        </div>
+        <q-input
+          v-model="message"
+          class="chat__input"
+          standout="bg-light-blue-7 text-white"
+          label="Введите сообщение"
+          clearable
+          @keyup.enter="sendMessage"
         />
-        <!--        <div class="absolute-bottom">-->
-        <!--          <q-fab color="deep-orange" icon="keyboard_arrow_down" direction="down" />-->
-        <!--        </div>-->
       </div>
-      <q-input
-        v-model="message"
-        class="chat__input"
-        standout="bg-light-blue-7 text-white"
-        label="Введите сообщение"
-        clearable
-        @keyup.enter="sendMessage"
-      />
     </div>
-  </div>
+  </q-page>
 </template>
 
 <style scoped lang="scss">
@@ -75,6 +77,7 @@ function sendMessage() {
   align-items: center;
   height: 100vh;
   padding: 20px;
+  background-color: $dark;
 
   .container {
     height: 100%;
