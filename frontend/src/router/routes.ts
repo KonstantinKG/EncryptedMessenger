@@ -4,7 +4,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     // component: () => import('layouts/default.vue'),
-    redirect: '/login',
+    redirect: '/login'
     // children: [{ path: '', component: () => import('pages/chat.vue') }]
   },
 
@@ -18,12 +18,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('pages/register.vue')
   },
 
-
   {
     path: '/chats',
     // component: () => import('pages/chats.vue')
-    component: () => import('layouts/default.vue')
-    // children: [{ path: '', component: () => import('pages/IndexPage.vue') }]
+    component: () => import('layouts/default.vue'),
+    children: [
+      { path: '/:id', name: 'Chat', component: () => import('pages/chat.vue') }]
   },
 
   {

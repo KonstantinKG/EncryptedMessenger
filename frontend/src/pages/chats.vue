@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import EncryptedMessengerService from 'src/api'
+import ChatService from 'src/api/chat'
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 
@@ -37,7 +37,7 @@ socket.onerror = (e) => {
 
 async function getChats() {
   try {
-    const { data } = await EncryptedMessengerService.getAllChats(page.value)
+    const { data } = await ChatService.getAllChats(page.value)
     chats.value = data
   } catch (e) {
     console.error(e)

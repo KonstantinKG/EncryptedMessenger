@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import EncryptedMessengerService from 'src/api'
-import { Register } from 'src/api/types'
+import AuthService from 'src/api/auth'
+import { Login } from 'src/api/auth/types'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 
 const router = useRouter()
 const $q = useQuasar()
-const form = reactive<Register>({
+const form = reactive<Login>({
   username: '',
   password: ''
 })
@@ -19,7 +19,7 @@ async function onSubmit() {
     for (const key in form) {
       formData.append(key, form[key])
     }
-    const { data } = await EncryptedMessengerService.login(formData)
+    const { data } = await AuthService.login(formData)
     $q.cookies.set('id_access', data.id)
     $q.notify({
       message: 'Вы вошли в аккаунт!',
