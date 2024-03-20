@@ -1,5 +1,5 @@
 <template>
-  <div class="WAL position-relative bg-main" :style="style">
+  <div class="WAL position-relative bg-main-dark" :style="style">
     <q-layout view="lHh Lpr lFf" class="WAL__layout shadow-3" container>
       <q-header elevated>
         <q-toolbar class="bg-main-secondary text-black">
@@ -55,7 +55,7 @@
       </q-header>
 
       <q-drawer v-model="leftDrawerOpen" show-if-above bordered :breakpoint="690">
-        <q-toolbar class="bg-blue-10">
+        <q-toolbar class="bg-main-secondary">
           <q-avatar class="cursor-pointer">
             <img src="https://cdn.quasar.dev/logo-v2/svg/logo.svg" />
           </q-avatar>
@@ -67,22 +67,13 @@
             <q-menu auto-close :offset="[110, 8]">
               <q-list style="min-width: 150px">
                 <q-item clickable>
-                  <q-item-section>New group</q-item-section>
+                  <q-item-section>Профиль</q-item-section>
                 </q-item>
                 <q-item clickable>
-                  <q-item-section>Profile</q-item-section>
+                  <q-item-section>Новый чат</q-item-section>
                 </q-item>
                 <q-item clickable>
-                  <q-item-section>Archived</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Favorites</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Settings</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Logout</q-item-section>
+                  <q-item-section>Выйти</q-item-section>
                 </q-item>
               </q-list>
             </q-menu>
@@ -91,14 +82,14 @@
           <q-btn round flat icon="close" class="WAL__drawer-close" @click="toggleLeftDrawer" />
         </q-toolbar>
 
-        <q-toolbar class="bg-blue-10">
+        <q-toolbar class="bg-main-secondary">
           <q-input
             v-model="search"
             rounded
             outlined
             dense
             class="WAL__field full-width"
-            bg-color="white"
+            bg-color="dark"
             placeholder="Search or start a new conversation"
           >
             <template #prepend>
@@ -107,7 +98,7 @@
           </q-input>
         </q-toolbar>
 
-        <q-scroll-area style="height: calc(100% - 100px)">
+        <q-scroll-area style="height: calc(100% - 100px)" class="bg-main">
           <q-list>
             <q-item
               v-for="(conversation, index) in conversations"
@@ -144,30 +135,31 @@
         </q-scroll-area>
       </q-drawer>
 
-      <q-page-container class="bg-blue-10">
+      <q-page-container class="bg-main-secondary">
         <router-view />
       </q-page-container>
 
-<!--      <q-footer>-->
-<!--        <q-toolbar class="bg-main-secondary text-black row">-->
-<!--          <q-input-->
-<!--            v-model="message"-->
-<!--            rounded-->
-<!--            outlined-->
-<!--            dense-->
-<!--            class="WAL__field col-grow q-mr-sm"-->
-<!--            bg-color="main"-->
-<!--            placeholder="Введите сообщение"-->
-<!--          />-->
-<!--        </q-toolbar>-->
-<!--      </q-footer>-->
+      <!--      <q-footer>-->
+      <!--        <q-toolbar class="bg-main-secondary text-black row">-->
+      <!--          <q-input-->
+      <!--            v-model="message"-->
+      <!--            rounded-->
+      <!--            outlined-->
+      <!--            dense-->
+      <!--            class="WAL__field col-grow q-mr-sm"-->
+      <!--            bg-color="main"-->
+      <!--            placeholder="Введите сообщение"-->
+      <!--          />-->
+      <!--        </q-toolbar>-->
+      <!--      </q-footer>-->
     </q-layout>
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import { useQuasar } from 'quasar'
 import { ref, computed } from 'vue'
+import EncryptedMessengerService from 'src/api'
 
 const conversations = [
   {
@@ -204,47 +196,69 @@ const conversations = [
   }
 ]
 
-export default {
-  name: 'WhatsappLayout',
+const $q = useQuasar()
 
-  setup() {
-    const $q = useQuasar()
+const chats = ref({
+  total: 0,
+  pages: 0,
+  current: 1,
+  data: []
+})
+const page = ref(1)
 
-    const leftDrawerOpen = ref(false)
-    const search = ref('')
-    const message = ref('')
-    const currentConversationIndex = ref(0)
+const socket = new WebSocket('ws://localhost:8201')
 
-    const currentConversation = computed(() => {
-      return conversations[currentConversationIndex.value]
+socket.onopen = (e) => {
+  socket.send(
+    JSON.stringify({
+      type: 'listen',
+      user_id: $q.cookies.get('id_access')
     })
+  )
+}
 
-    const style = computed(() => ({
-      height: $q.screen.height + 'px'
-    }))
+socket.onmessage = (event) => {
+  console.log(event.data)
+}
 
-    function toggleLeftDrawer() {
-      leftDrawerOpen.value = !leftDrawerOpen.value
-    }
+socket.onclose = () => {
+  console.log('closed')
+}
 
-    function setCurrentConversation(index) {
-      currentConversationIndex.value = index
-    }
+socket.onerror = (e) => {
+  console.error(e)
+}
 
-    return {
-      leftDrawerOpen,
-      search,
-      message,
-      currentConversationIndex,
-      conversations,
-
-      currentConversation,
-      setCurrentConversation,
-      style,
-
-      toggleLeftDrawer
-    }
+async function getChats() {
+  try {
+    const { data } = await EncryptedMessengerService.getAllChats(page.value)
+    chats.value = data
+  } catch (e) {
+    console.error(e)
   }
+}
+
+getChats()
+
+const leftDrawerOpen = ref(false)
+const search = ref('')
+const message = ref('')
+const currentConversationIndex = ref(0)
+
+const currentConversation = computed(() => {
+  return conversations[currentConversationIndex.value]
+})
+
+const style = computed(() => ({
+  height: $q.screen.height + 'px'
+}))
+
+function toggleLeftDrawer() {
+  leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+function setCurrentConversation(index) {
+  currentConversationIndex.value = index
 }
 </script>
 
@@ -254,7 +268,6 @@ export default {
   height: 100%
   padding-top: 20px
   padding-bottom: 20px
-  background-color: $light-blue-10
 
   &:before
     content: ''
