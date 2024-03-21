@@ -4,6 +4,10 @@ import ChatService from 'src/api/chat'
 import { AllChatMessagesData, ChatMessageData } from 'src/api/chat/types'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { useUserStore } from 'stores/user'
+import { storeToRefs } from 'pinia'
+
+const { user } = storeToRefs(useUserStore())
 
 const $q = useQuasar()
 const route = useRoute()
@@ -18,6 +22,7 @@ const messages = ref<AllChatMessagesData>({
 const message = ref('')
 const file = ref<File>()
 const page = ref(1)
+const messagesWrapper = ref<HTMLDivElement | null>(null)
 
 async function fetchAllMessages() {
   try {
@@ -60,6 +65,14 @@ async function sendMessage() {
   }
 }
 
+function onSelectFile(target: HTMLInputElement) {
+  const selectedFile = target.files?.[0]
+  target.value = ''
+  if (selectedFile) {
+    file.value = selectedFile
+  }
+}
+
 const reverseMessages = computed(() => {
   return [...messages.value.data].reverse()
 })
@@ -87,11 +100,8 @@ socket.onmessage = (event) => {
   const message: ChatMessageData = JSON.parse(event.data).data
   if (message.chat_id === id.value) {
     messages.value.data.unshift(message)
+    messagesWrapper.value?.scrollTo({ top: messagesWrapper.value.scrollHeight, behavior: 'smooth' })
   }
-}
-
-socket.onclose = () => {
-  console.log('closed')
 }
 
 socket.onerror = (e) => {
@@ -101,13 +111,13 @@ socket.onerror = (e) => {
 
 <template>
   <q-page class="chat">
-    <div class="chat__messages">
+    <div ref="messagesWrapper" class="chat__messages">
       <q-chat-message
         v-for="msg in reverseMessages"
         :key="msg.id"
-        :text="[msg.content]"
+        :text="[msg.content, msg.file]"
         :stamp="msg.relevance"
-        :sent="msg.user_id === ownerId"
+        :sent="msg.user_id === user.id"
         :bg-color="msg.user_id === ownerId ? 'amber-7' : 'primary'"
         text-color="white"
       >
@@ -116,14 +126,20 @@ socket.onerror = (e) => {
       <!--            <q-fab color="deep-orange" icon="keyboard_arrow_down" direction="down" />-->
       <!--          </div>-->
     </div>
-    <q-input
-      v-model="message"
-      class="chat__input"
-      standout="bg-light-blue-7 text-white"
-      label="Введите сообщение"
-      clearable
-      @keyup.enter="sendMessage"
-    />
+    <q-toolbar class="chat__toolbar">
+      <q-input
+        v-model="message"
+        class="chat__input"
+        standout="bg-light-blue-7 text-white"
+        label="Введите сообщение"
+        clearable
+        @keyup.enter="sendMessage"
+      />
+      <label class="cursor-pointer">
+        <q-icon size="25px" name="attachment" class="rotate-135" />
+        <input type="file" hidden @change="onSelectFile($event.target as HTMLInputElement)" />
+      </label>
+    </q-toolbar>
   </q-page>
 </template>
 
@@ -144,8 +160,13 @@ socket.onerror = (e) => {
     padding-right: 20px;
   }
 
-  &__input {
+  &__toolbar {
     margin-top: 10px;
+    gap: 10px;
+  }
+
+  &__input {
+    flex: 1 1 auto;
   }
 }
 </style>

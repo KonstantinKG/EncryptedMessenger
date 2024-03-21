@@ -7,6 +7,7 @@ import { AllUsersData, UserData } from 'src/api/users/types'
 import { filesPath } from 'boot/axios'
 import PersonIcon from 'src/icons/person.vue'
 
+const emit = defineEmits<{ (e: 'onCreated'): void }>()
 const isOpen = defineModel<boolean>('isOpen', { required: true })
 
 const name = ref('')
@@ -57,6 +58,7 @@ async function createChat() {
       )
     }
     await ChatService.createChat(formData)
+    emit('onCreated')
     isOpen.value = false
   } catch (e) {
     console.error(e)
@@ -170,8 +172,8 @@ function nextStep() {
           >
             <q-item-section>
               <q-avatar font-size="40px">
-                <!--                  <q-img v-if="user.image" :src="`${filesPath}${user.image}`" alt="User avatar" />-->
-                <!--                  <person-icon v-else />-->
+                <q-img v-if="user.image" :src="`${filesPath}${user.image}`" alt="User avatar" />
+                <person-icon v-else />
               </q-avatar>
             </q-item-section>
             <q-item-section avatar>

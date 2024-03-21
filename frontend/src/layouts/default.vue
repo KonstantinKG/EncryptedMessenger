@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import ChatService from 'src/api/chat'
 import SearchService from 'src/api/search'
 import { useRouter } from 'vue-router'
@@ -57,48 +57,13 @@ async function searchChats() {
   }
 }
 
-const conversations = [
-  {
-    id: 1,
-    person: 'Razvan Stoenescu',
-    avatar: 'https://cdn.quasar.dev/team/razvan_stoenescu.jpeg',
-    caption: "I'm working on Quasar!",
-    time: '15:00',
-    sent: true
-  },
-  {
-    id: 2,
-    person: 'Dan Popescu',
-    avatar: 'https://cdn.quasar.dev/team/dan_popescu.jpg',
-    caption: "I'm working on Quasar!",
-    time: '16:00',
-    sent: true
-  },
-  {
-    id: 3,
-    person: 'Jeff Galbraith',
-    avatar: 'https://cdn.quasar.dev/team/jeff_galbraith.jpg',
-    caption: "I'm working on Quasar!",
-    time: '18:00',
-    sent: true
-  },
-  {
-    id: 4,
-    person: 'Allan Gaunt',
-    avatar: 'https://cdn.quasar.dev/team/allan_gaunt.png',
-    caption: "I'm working on Quasar!",
-    time: '17:00',
-    sent: true
-  }
-]
-
 const leftDrawerOpen = ref(false)
 const search = ref('')
 const message = ref('')
-const currentConversationIndex = ref(0)
+const currentChatIndex = ref(0)
 
-const currentConversation = computed(() => {
-  return conversations[currentConversationIndex.value]
+const currentChat = computed(() => {
+  return chats.value.data[currentChatIndex.value]
 })
 
 const style = computed(() => ({
@@ -109,9 +74,13 @@ function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 
-function setCurrentConversation(index) {
-  currentConversationIndex.value = index
+function setCurrentChat(index: number) {
+  currentChatIndex.value = index
 }
+
+watch(searchChatsName, async () => {
+  await searchChats()
+})
 </script>
 
 <template>
@@ -129,12 +98,13 @@ function setCurrentConversation(index) {
 
           <q-btn round flat>
             <q-avatar>
-              <img :src="currentConversation.avatar" />
+              <q-img v-if="currentChat?.image" :src="`${filesPath}${currentChat.image}`" alt="Chat avatar" />
+              <person-icon v-else />
             </q-avatar>
           </q-btn>
 
           <span class="q-subtitle-1 q-pl-md">
-            {{ currentConversation.person }}
+            {{ currentChat?.name }}
           </span>
 
           <q-space />
@@ -205,8 +175,8 @@ function setCurrentConversation(index) {
             outlined
             dense
             class="WAL__field full-width"
-            bg-color="dark"
             placeholder="Искать"
+            :debounce="300"
             @keyup.enter="searchChats"
           >
             <template #prepend>
@@ -218,7 +188,7 @@ function setCurrentConversation(index) {
         <q-scroll-area style="height: calc(100% - 100px)" class="bg-main">
           <q-list>
             <q-item
-              v-for="chat in chats.data"
+              v-for="(chat, index) in chats.data"
               :key="chat.id"
               v-ripple
               clickable
@@ -228,11 +198,12 @@ function setCurrentConversation(index) {
                 query: { owner_id: chat.owner_id },
                 params: { id: chat.id }
               }"
+              @click="setCurrentChat(index)"
             >
               <q-item-section avatar>
                 <q-avatar font-size="40px">
-                  <!--                  <q-img v-if="chat.image" :src="`${filesPath}${chat.image}`" alt="Chat avatar" />-->
-                  <!--                  <person-icon v-else />-->
+                  <q-img v-if="chat.image" :src="`${filesPath}${chat.image}`" alt="Chat avatar" />
+                  <person-icon v-else />
                 </q-avatar>
               </q-item-section>
               <q-item-section>
@@ -262,7 +233,7 @@ function setCurrentConversation(index) {
       <!--      </q-footer>-->
     </q-layout>
   </div>
-  <create-chat-dialog v-model:is-open="isCreateChatDialogOpen" />
+  <create-chat-dialog v-model:is-open="isCreateChatDialogOpen" @on-created="fetchChats" />
 </template>
 
 <style scoped lang="sass">
