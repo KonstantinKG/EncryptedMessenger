@@ -21,29 +21,6 @@ const chats = ref<AllChatsData>({
 const page = ref(1)
 const isCreateChatDialogOpen = ref(false)
 
-const socket = new WebSocket('ws://localhost:8201')
-
-socket.onopen = (e) => {
-  socket.send(
-    JSON.stringify({
-      type: 'listen',
-      user_id: $q.cookies.get('id_access')
-    })
-  )
-}
-
-socket.onmessage = (event) => {
-  console.log(event.data)
-}
-
-socket.onclose = () => {
-  console.log('closed')
-}
-
-socket.onerror = (e) => {
-  console.error(e)
-}
-
 async function fetchChats() {
   try {
     const { data } = await ChatService.getAllChats(page.value)
@@ -62,6 +39,7 @@ fetchChats()
 
 const searchChatsName = ref('')
 const searchChatsPage = ref(1)
+
 async function searchChats() {
   try {
     const { data } = await SearchService.searchChats({
@@ -244,12 +222,17 @@ function setCurrentConversation(index) {
               :key="chat.id"
               v-ripple
               clickable
-              :to="{ name: 'Chat', params: {id: chat.id} }"
+              :to="{
+                path: '/chats/:id',
+                name: 'Chat',
+                query: { owner_id: chat.owner_id },
+                params: { id: chat.id }
+              }"
             >
               <q-item-section avatar>
                 <q-avatar font-size="40px">
-                  <q-img v-if="chat.image" :src="`${filesPath}${chat.image}`" alt="Chat avatar" />
-                  <person-icon v-else />
+                  <!--                  <q-img v-if="chat.image" :src="`${filesPath}${chat.image}`" alt="Chat avatar" />-->
+                  <!--                  <person-icon v-else />-->
                 </q-avatar>
               </q-item-section>
               <q-item-section>

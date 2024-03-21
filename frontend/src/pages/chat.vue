@@ -1,28 +1,14 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import ChatService from 'src/api/chat'
-import { AllChatMessagesData } from 'src/api/chat/types'
+import { AllChatMessagesData, ChatMessageData } from 'src/api/chat/types'
 import { useRoute } from 'vue-router'
+import { useQuasar } from 'quasar'
 
-// const messages = ref([
-//   {
-//     text: ['Здарова'],
-//     sent: true,
-//     stamps: '12:26',
-//     name: '',
-//     avatar: 'https://cdn.quasar.dev/img/avatar3.jpg'
-//   },
-//   {
-//     text: ['hello'],
-//     sent: false,
-//     stamps: '12:27',
-//     name: 'Илья',
-//     avatar: 'https://cdn.quasar.dev/img/avatar5.jpg'
-//   }
-// ])
-
+const $q = useQuasar()
 const route = useRoute()
 const id = computed(() => route.params.id as string)
+const ownerId = computed(() => route.query.owner_id as string)
 const messages = ref<AllChatMessagesData>({
   total: 0,
   pages: 0,
@@ -57,67 +43,87 @@ async function loadMore() {
 
 async function sendMessage() {
   try {
-    const formData = new FormData()
-    formData.append('chat_id', id.value)
-    formData.append('content', message.value)
-    if (file.value) {
-      formData.append('file', file.value)
+    if (message.value) {
+      const formData = new FormData()
+      formData.append('chat_id', id.value)
+      formData.append('content', message.value)
+      if (file.value) {
+        formData.append('file', file.value)
+      }
+      formData.append('relevance', new Date().toISOString())
+      const { data } = await ChatService.addChatMessage(formData)
+      messages.value.data.unshift(data)
+      message.value = ''
     }
-    formData.append('relevance', new Date().toISOString())
-    const { data } = await ChatService.addChatMessage(formData)
-    messages.value.data.push(data)
-    message.value = ''
   } catch (e) {
     console.error(e)
   }
 }
 
-fetchAllMessages()
+const reverseMessages = computed(() => {
+  return [...messages.value.data].reverse()
+})
+
+watch(
+  id,
+  async () => {
+    await fetchAllMessages()
+  },
+  { immediate: true }
+)
+
+const socket = new WebSocket('ws://localhost:8201')
+
+socket.onopen = () => {
+  socket.send(
+    JSON.stringify({
+      type: 'listen',
+      user_id: $q.cookies.get('id_access')
+    })
+  )
+}
+
+socket.onmessage = (event) => {
+  const message: ChatMessageData = JSON.parse(event.data).data
+  if (message.chat_id === id.value) {
+    messages.value.data.unshift(message)
+  }
+}
+
+socket.onclose = () => {
+  console.log('closed')
+}
+
+socket.onerror = (e) => {
+  console.error(e)
+}
 </script>
 
 <template>
-  <q-page>
-    <div class="chat">
-      <div class="container">
-        <div class="chat__messages scroll">
-          <q-chat-message>
-            <template #label>
-              <q-badge label="16 марта" color="dark" />
-            </template>
-          </q-chat-message>
-          <!--          <q-chat-message-->
-          <!--            v-for="(msg, index) in messages.data"-->
-          <!--            :key="index"-->
-          <!--            :sent="msg.sent"-->
-          <!--            :text="msg.content"-->
-          <!--            :stamp="msg.relevance"-->
-          <!--            :name="msg.name"-->
-          <!--            :avatar="msg.avatar"-->
-          <!--            :bg-color="msg.sent ? 'amber-7' : 'primary'"-->
-          <!--            text-color="white"-->
-          <!--          />-->
-          <q-chat-message
-            v-for="msg in messages.data"
-            :key="msg.id"
-            :text="msg.content"
-            :stamp="msg.relevance"
-            text-color="white"
-          />
-          <div class="absolute-bottom">
-            <q-fab color="deep-orange" icon="keyboard_arrow_down" direction="down" />
-          </div>
-        </div>
-        {{messages.data}}
-        <q-input
-          v-model="message"
-          class="chat__input"
-          standout="bg-light-blue-7 text-white"
-          label="Введите сообщение"
-          clearable
-          @keyup.enter="sendMessage"
-        />
-      </div>
+  <q-page class="chat">
+    <div class="chat__messages">
+      <q-chat-message
+        v-for="msg in reverseMessages"
+        :key="msg.id"
+        :text="[msg.content]"
+        :stamp="msg.relevance"
+        :sent="msg.user_id === ownerId"
+        :bg-color="msg.user_id === ownerId ? 'amber-7' : 'primary'"
+        text-color="white"
+      >
+      </q-chat-message>
+      <!--          <div class="absolute-bottom-right">-->
+      <!--            <q-fab color="deep-orange" icon="keyboard_arrow_down" direction="down" />-->
+      <!--          </div>-->
     </div>
+    <q-input
+      v-model="message"
+      class="chat__input"
+      standout="bg-light-blue-7 text-white"
+      label="Введите сообщение"
+      clearable
+      @keyup.enter="sendMessage"
+    />
   </q-page>
 </template>
 
@@ -125,23 +131,17 @@ fetchAllMessages()
 .chat {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  height: 100vh;
   padding: 20px;
-  background-color: $dark;
-
-  .container {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    max-width: 1000px;
-    width: 100%;
-  }
+  background-color: $main-dark;
 
   &__messages {
+    //max-height: calc(100vh - 126px);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     position: relative;
     padding-right: 20px;
-    flex-grow: 1;
   }
 
   &__input {
