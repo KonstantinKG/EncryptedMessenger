@@ -4,9 +4,7 @@ import AuthService from 'src/api/auth'
 import { Login } from 'src/api/auth/types'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { useUserStore } from 'stores/user'
 
-const store = useUserStore()
 const router = useRouter()
 const $q = useQuasar()
 const form = reactive<Login>({
@@ -23,7 +21,6 @@ async function onSubmit() {
     }
     const { data } = await AuthService.login(formData)
     $q.cookies.set('id_access', data.id)
-    await store.getUser(data.id)
     $q.notify({
       message: 'Вы вошли в аккаунт!',
       color: 'primary',

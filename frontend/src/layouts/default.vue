@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { useQuasar } from 'quasar'
 import { ref, computed, watch } from 'vue'
+import CreateChatDialog from 'components/create-chat-dialog.vue'
 import ChatService from 'src/api/chat'
 import SearchService from 'src/api/search'
-import { useRouter } from 'vue-router'
-import { biAward } from '@quasar/extras/bootstrap-icons'
-import CreateChatDialog from 'components/create-chat-dialog.vue'
+import { useChatStore } from 'stores/chat'
+import { storeToRefs } from 'pinia'
+import { FILES_PATH } from 'src/constants'
 import { AllChatsData } from 'src/api/chat/types'
-import { filesPath } from 'boot/axios'
 import PersonIcon from 'src/icons/person.vue'
+import LogoIcon from 'src/icons/logo.vue'
 
-const $q = useQuasar()
+
+const { sendMessage } = useChatStore()
+const { message, file } = storeToRefs(useChatStore())
 
 const chats = ref<AllChatsData>({
   total: 0,
@@ -57,22 +59,11 @@ async function searchChats() {
   }
 }
 
-const leftDrawerOpen = ref(false)
-const search = ref('')
-const message = ref('')
 const currentChatIndex = ref(0)
 
 const currentChat = computed(() => {
   return chats.value.data[currentChatIndex.value]
 })
-
-const style = computed(() => ({
-  height: $q.screen.height + 'px'
-}))
-
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
 
 function setCurrentChat(index: number) {
   currentChatIndex.value = index
@@ -81,208 +72,168 @@ function setCurrentChat(index: number) {
 watch(searchChatsName, async () => {
   await searchChats()
 })
+
+function onSelectFile(target: HTMLInputElement) {
+  const selectedFile = target.files?.[0]
+  target.value = ''
+  if (selectedFile) {
+    file.value = selectedFile
+  }
+}
+
+const pageWrapper = ref<HTMLElement | null>(null)
+async function onSend() {
+  await sendMessage(currentChat.value.id)
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+}
 </script>
 
 <template>
-  <div class="WAL position-relative bg-main-dark" :style="style">
-    <q-layout view="lHh Lpr lFf" class="WAL__layout shadow-3" container>
-      <q-header elevated>
-        <q-toolbar class="bg-main-secondary text-black">
-          <q-btn
-            round
-            flat
-            icon="keyboard_arrow_left"
-            class="WAL__drawer-open q-mr-sm"
-            @click="toggleLeftDrawer"
-          />
-
-          <q-btn round flat>
-            <q-avatar>
-              <q-img v-if="currentChat?.image" :src="`${filesPath}${currentChat.image}`" alt="Chat avatar" />
-              <person-icon v-else />
-            </q-avatar>
-          </q-btn>
-
-          <span class="q-subtitle-1 q-pl-md">
-            {{ currentChat?.name }}
-          </span>
-
-          <q-space />
-
-          <q-btn round flat icon="search" />
-          <q-btn round flat>
-            <q-icon name="attachment" class="rotate-135" />
-          </q-btn>
-          <q-btn round flat icon="more_vert">
-            <q-menu auto-close :offset="[110, 0]">
-              <q-list style="min-width: 150px">
-                <q-item clickable>
-                  <q-item-section>Contact data</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Block</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Select messages</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Silence</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Clear messages</q-item-section>
-                </q-item>
-                <q-item clickable>
-                  <q-item-section>Erase messages</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-          </q-btn>
-        </q-toolbar>
-      </q-header>
-
-      <q-drawer v-model="leftDrawerOpen" show-if-above bordered :breakpoint="690">
-        <q-toolbar class="bg-main-secondary">
-          <q-avatar class="cursor-pointer">
-            <img src="https://cdn.quasar.dev/logo-v2/svg/logo.svg" />
+  <q-layout view="lHh Lpr lFf" class="WAL__layout shadow-3">
+    <q-header elevated>
+      <q-toolbar class="bg-main-secondary">
+        <q-btn round flat>
+          <q-avatar>
+            <q-img
+              v-if="currentChat?.image"
+              :src="`${FILES_PATH}${currentChat.image}`"
+              alt="Chat avatar"
+            />
+            <person-icon v-else />
           </q-avatar>
+        </q-btn>
 
-          <q-space />
+        <span class="q-subtitle-1 q-pl-md">
+          {{ currentChat?.name }}
+        </span>
 
-          <q-btn round flat icon="message" />
-          <q-btn round flat icon="more_vert">
-            <q-menu auto-close :offset="[110, 8]">
-              <q-list style="min-width: 150px">
-                <q-item clickable>
-                  <q-item-section>Профиль</q-item-section>
-                </q-item>
-                <q-item clickable @click="isCreateChatDialogOpen = true">
-                  <q-item-section>Новый чат</q-item-section>
-                </q-item>
-                <q-item clickable to="/login">
-                  <q-item-section>Выйти</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-          </q-btn>
+        <q-space />
 
-          <q-btn round flat icon="close" class="WAL__drawer-close" @click="toggleLeftDrawer" />
-        </q-toolbar>
-
-        <q-toolbar class="bg-main-secondary">
-          <q-input
-            v-model="searchChatsName"
-            rounded
-            outlined
-            dense
-            class="WAL__field full-width"
-            placeholder="Искать"
-            :debounce="300"
-            @keyup.enter="searchChats"
+        <q-btn round flat icon="search" />
+        <q-btn round flat>
+          <q-icon name="attachment" class="rotate-135" />
+        </q-btn>
+        <q-btn round flat icon="more_vert">
+          <q-menu auto-close :offset="[110, 0]">
+            <q-list style="min-width: 150px">
+              <q-item clickable>
+                <q-item-section>Contact data</q-item-section>
+              </q-item>
+              <q-item clickable>
+                <q-item-section>Block</q-item-section>
+              </q-item>
+              <q-item clickable>
+                <q-item-section>Select messages</q-item-section>
+              </q-item>
+              <q-item clickable>
+                <q-item-section>Silence</q-item-section>
+              </q-item>
+              <q-item clickable>
+                <q-item-section>Clear messages</q-item-section>
+              </q-item>
+              <q-item clickable>
+                <q-item-section>Erase messages</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+      </q-toolbar>
+    </q-header>
+    <q-drawer :model-value="true" show-if-above bordered :breakpoint="690">
+      <q-toolbar class="bg-main-secondary">
+        <q-avatar font-size="40px">
+          <logo-icon />
+        </q-avatar>
+        <q-space />
+        <q-btn round flat icon="more_vert">
+          <q-menu auto-close :offset="[110, 8]">
+            <q-list style="min-width: 150px">
+              <q-item clickable>
+                <q-item-section>Профиль</q-item-section>
+              </q-item>
+              <q-item clickable @click="isCreateChatDialogOpen = true">
+                <q-item-section>Новый чат</q-item-section>
+              </q-item>
+              <q-item clickable to="/login">
+                <q-item-section>Выйти</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+      </q-toolbar>
+      <q-toolbar class="bg-main-secondary">
+        <q-input
+          v-model="searchChatsName"
+          rounded
+          outlined
+          dense
+          class="full-width"
+          placeholder="Искать"
+          :debounce="300"
+          @keyup.enter="searchChats"
+        >
+          <template #prepend>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </q-toolbar>
+      <q-scroll-area style="height: calc(100% - 100px)" class="bg-main">
+        <q-list>
+          <q-item
+            v-for="(chat, index) in chats.data"
+            :key="chat.id"
+            clickable
+            active-class="text-white bg-main-dark"
+            :to="{
+              name: 'Chat',
+              params: { id: chat.id }
+            }"
+            @click="setCurrentChat(index)"
           >
-            <template #prepend>
-              <q-icon name="search" />
-            </template>
-          </q-input>
-        </q-toolbar>
+            <q-item-section avatar>
+              <q-avatar font-size="40px">
+                <q-img v-if="chat.image" :src="`${FILES_PATH}${chat.image}`" alt="Chat avatar" />
+                <person-icon v-else />
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>
+              {{ chat.name }}
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-scroll-area>
+    </q-drawer>
 
-        <q-scroll-area style="height: calc(100% - 100px)" class="bg-main">
-          <q-list>
-            <q-item
-              v-for="(chat, index) in chats.data"
-              :key="chat.id"
-              v-ripple
-              clickable
-              :to="{
-                path: '/chats/:id',
-                name: 'Chat',
-                query: { owner_id: chat.owner_id },
-                params: { id: chat.id }
-              }"
-              @click="setCurrentChat(index)"
-            >
-              <q-item-section avatar>
-                <q-avatar font-size="40px">
-                  <q-img v-if="chat.image" :src="`${filesPath}${chat.image}`" alt="Chat avatar" />
-                  <person-icon v-else />
-                </q-avatar>
-              </q-item-section>
-              <q-item-section>
-                {{ chat.name }}
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-scroll-area>
-      </q-drawer>
+    <q-page-container ref="pageWrapper" class="bg-main-secondary">
+      <router-view />
+    </q-page-container>
 
-      <q-page-container class="bg-main-secondary">
-        <router-view />
-      </q-page-container>
+    <q-footer>
+      <q-toolbar class="chat-toolbar">
+        <q-input
+          v-model="message"
+          class="full-width"
+          standout="bg-main text-white"
+          label="Введите сообщение"
+          clearable
+          color="red"
+          @keyup.enter="onSend"
+        />
+        <label class="cursor-pointer">
+          <q-icon size="25px" name="attachment" class="rotate-135" />
+          <input type="file" hidden @change="onSelectFile($event.target as HTMLInputElement)" />
+        </label>
+      </q-toolbar>
+    </q-footer>
+  </q-layout>
 
-      <!--      <q-footer>-->
-      <!--        <q-toolbar class="bg-main-secondary text-black row">-->
-      <!--          <q-input-->
-      <!--            v-model="message"-->
-      <!--            rounded-->
-      <!--            outlined-->
-      <!--            dense-->
-      <!--            class="WAL__field col-grow q-mr-sm"-->
-      <!--            bg-color="main"-->
-      <!--            placeholder="Введите сообщение"-->
-      <!--          />-->
-      <!--        </q-toolbar>-->
-      <!--      </q-footer>-->
-    </q-layout>
-  </div>
   <create-chat-dialog v-model:is-open="isCreateChatDialogOpen" @on-created="fetchChats" />
 </template>
 
-<style scoped lang="sass">
-.WAL
-  width: 100%
-  height: 100%
-  padding-top: 20px
-  padding-bottom: 20px
-
-  &:before
-    content: ''
-    height: 127px
-    position: fixed
-    top: 0
-    width: 100%
-    background-color: $main-dark
-
-  &__layout
-    margin: 0 auto
-    z-index: 4000
-    height: 100%
-    width: 90%
-    max-width: 950px
-    border-radius: 5px
-
-  &__field.q-field--outlined .q-field__control:before
-    border: none
-
-  .q-drawer--standard
-    .WAL__drawer-close
-      display: none
-
-@media (max-width: 850px)
-  .WAL
-    padding: 0
-
-    &__layout
-      width: 100%
-      border-radius: 0
-
-@media (min-width: 691px)
-  .WAL
-    &__drawer-open
-      display: none
-
-.conversation__summary
-  margin-top: 4px
-
-.conversation__more
-  margin-top: 0 !important
-  font-size: 1.4rem
+<style scoped lang="scss">
+.chat-toolbar {
+  padding-left: 0;
+  gap: 10px;
+  color: #fff;
+}
 </style>

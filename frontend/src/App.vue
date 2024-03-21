@@ -3,7 +3,10 @@
 </template>
 
 <script setup lang="ts">
-defineOptions({
-  name: 'App'
-})
+import { useUserStore } from 'stores/user'
+import { useQuasar } from 'quasar'
+
+const $q = useQuasar()
+
+useUserStore().fetchUser($q.cookies.get('id_access'))
 </script>

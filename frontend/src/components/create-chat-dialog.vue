@@ -4,7 +4,7 @@ import ChatService from 'src/api/chat'
 import UsersService from 'src/api/users'
 import SearchService from 'src/api/search'
 import { AllUsersData, UserData } from 'src/api/users/types'
-import { filesPath } from 'boot/axios'
+import { FILES_PATH } from 'src/constants'
 import PersonIcon from 'src/icons/person.vue'
 
 const emit = defineEmits<{ (e: 'onCreated'): void }>()
@@ -172,7 +172,7 @@ function nextStep() {
           >
             <q-item-section>
               <q-avatar font-size="40px">
-                <q-img v-if="user.image" :src="`${filesPath}${user.image}`" alt="User avatar" />
+                <q-img v-if="user.image" :src="`${FILES_PATH}${user.image}`" alt="User avatar" />
                 <person-icon v-else />
               </q-avatar>
             </q-item-section>

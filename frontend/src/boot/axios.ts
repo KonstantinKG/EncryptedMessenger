@@ -16,7 +16,6 @@ declare module '@vue/runtime-core' {
 // "export default () => {}" function below (which runs individually
 // for each client)
 const api = axios.create({ baseURL: import.meta.env.VITE_BACKEND_URL })
-export const filesPath = 'C:/My Projects/EncryptedMessenger/'
 
 api.interceptors.request.use((config) => {
   const idAccess = Cookies.get('id_access')

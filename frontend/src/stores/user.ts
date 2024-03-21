@@ -4,14 +4,14 @@ import { ref } from 'vue'
 import UsersService from 'src/api/users'
 
 
-export const useUserStore = defineStore('counter', () => {
+export const useUserStore = defineStore('user-store', () => {
   const user = ref<UserData>({
     id: '',
     username: '',
     image: null
   })
 
-  async function getUser(id: string) {
+  async function fetchUser(id: string) {
     try {
       const { data } = await UsersService.getUser(id)
       user.value = data
@@ -20,5 +20,14 @@ export const useUserStore = defineStore('counter', () => {
     }
   }
 
-  return { user, getUser }
+  async function fetchUsers(id: string) {
+    try {
+      const { data } = await UsersService.getAllUsers(id)
+      // user.value = data
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  return { user, fetchUser, fetchUsers }
 })

@@ -2,7 +2,7 @@
 
 a {
   text-decoration: none;
-  color: $primary;
+  color: #fff;
 }
 
 ::-webkit-scrollbar {
@@ -10,13 +10,13 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background-color: $dark;
-  border-radius: 10px;
+  background-color: $main-dark;
+  //border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: $primary;
-  border-radius: 10px;
+  //border-radius: 10px;
 }
 
 .bg-main {

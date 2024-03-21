@@ -5,9 +5,7 @@ import { Register } from 'src/api/auth/types'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import PersonIcon from 'src/icons/person.vue'
-import { useUserStore } from 'stores/user'
 
-const store = useUserStore()
 const router = useRouter()
 const $q = useQuasar()
 const form = reactive<Register>({
@@ -36,7 +34,6 @@ async function onSubmit() {
     }
     const { data } = await AuthService.register(formData)
     $q.cookies.set('id_access', data.id)
-    await store.getUser(data.id)
     $q.notify({
       message: 'Аккаунт успешно заегестрирован!',
       color: 'primary',
