@@ -3,7 +3,7 @@ import type { Pagination } from 'src/api/types'
 export interface UserData {
   id: string
   username: string
-  image: string | null
+  image: File | null
 }
 
 export interface AllUsersData extends Pagination {

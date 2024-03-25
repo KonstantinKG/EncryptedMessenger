@@ -3,7 +3,6 @@ import { UserData } from 'src/api/users/types'
 import { ref } from 'vue'
 import UsersService from 'src/api/users'
 
-
 export const useUserStore = defineStore('user-store', () => {
   const user = ref<UserData>({
     id: '',
@@ -20,6 +19,20 @@ export const useUserStore = defineStore('user-store', () => {
     }
   }
 
+  async function selfUpdate() {
+    try {
+      const formData = new FormData()
+      formData.append('username', user.value.username)
+      if (user.value.image) {
+        formData.append('image', user.value.image)
+      }
+      const { data } = await UsersService.selfUpdate(formData)
+      user.value = data
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   async function fetchUsers(id: string) {
     try {
       const { data } = await UsersService.getAllUsers(id)
@@ -29,5 +42,5 @@ export const useUserStore = defineStore('user-store', () => {
     }
   }
 
-  return { user, fetchUser, fetchUsers }
+  return { user, fetchUser, fetchUsers, selfUpdate }
 })

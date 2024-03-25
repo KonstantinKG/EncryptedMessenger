@@ -1,6 +1,6 @@
 import { boot } from 'quasar/wrappers'
 import axios, { AxiosInstance } from 'axios'
-import { Cookies } from 'quasar'
+import { LocalStorage } from 'quasar'
 
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
@@ -17,8 +17,8 @@ declare module '@vue/runtime-core' {
 // for each client)
 const api = axios.create({ baseURL: import.meta.env.VITE_BACKEND_URL })
 
-api.interceptors.request.use((config) => {
-  const idAccess = Cookies.get('id_access')
+api.interceptors.request.use(async (config) => {
+  const idAccess = LocalStorage.getItem('id_access')
   if (idAccess) {
     config.headers['X-Auth'] = idAccess
   }
@@ -31,7 +31,7 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error === 401) {
-      Cookies.remove('id_access')
+      LocalStorage.remove('id_access')
     }
     return Promise.reject(error)
   }

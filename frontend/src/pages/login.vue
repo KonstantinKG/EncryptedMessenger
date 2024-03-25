@@ -20,7 +20,7 @@ async function onSubmit() {
       formData.append(key, form[key])
     }
     const { data } = await AuthService.login(formData)
-    $q.cookies.set('id_access', data.id)
+    $q.localStorage.set('id_access', data.id)
     $q.notify({
       message: 'Вы вошли в аккаунт!',
       color: 'primary',

@@ -24,7 +24,7 @@ export interface SearchMessagesParams extends Pick<SearchMembersParams, 'page' |
 }
 
 export interface SearchMessagesData extends Pagination {
-  data: Omit<ChatMessageData, 'chat_id'>[]
+  data: ChatMessageData[]
 }
 
 export interface SearchChatsParams {

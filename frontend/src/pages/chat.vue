@@ -1,30 +1,26 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import ChatService from 'src/api/chat'
-import { AllChatMessagesData, ChatMessageData } from 'src/api/chat/types'
+import { ChatMessageData } from 'src/api/chat/types'
 import { useRoute } from 'vue-router'
-import { useQuasar } from 'quasar'
 import { useUserStore } from 'stores/user'
 import { storeToRefs } from 'pinia'
 import { FILES_PATH, FILE_FORMATS } from 'src/constants'
 import { formatDate } from 'src/helpers/formatDate'
 import { useChatStore } from 'stores/chat'
 
-const $q = useQuasar()
 const route = useRoute()
 const id = computed(() => route.params.id as string)
 
 const { user } = storeToRefs(useUserStore())
 const { fetchAllMessages } = useChatStore()
-const { messages, messagesPage } = storeToRefs(useChatStore())
+const { messages } = storeToRefs(useChatStore())
 
-const messagesWrapper = ref<HTMLDivElement | null>(null)
+const messagesPage = ref(1)
 
-fetchAllMessages(id.value)
-
-async function loadMore() {
+async function loadMore(index, done) {
   messagesPage.value++
-  await fetchAllMessages(id.value)
+  await fetchAllMessages(id.value, messagesPage.value)
+  done(messages.value.current > messages.value.pages)
 }
 
 const reverseMessages = computed(() => {
@@ -34,7 +30,9 @@ const reverseMessages = computed(() => {
 watch(
   id,
   async (value) => {
-    await fetchAllMessages(value)
+    console.log(value)
+    messagesPage.value = 1
+    await fetchAllMessages(value, messagesPage.value)
   },
   { immediate: true }
 )
@@ -45,7 +43,7 @@ socket.onopen = () => {
   socket.send(
     JSON.stringify({
       type: 'listen',
-      user_id: $q.cookies.get('id_access')
+      user_id: user.value.id
     })
   )
 }
@@ -54,7 +52,6 @@ socket.onmessage = (event) => {
   const message: ChatMessageData = JSON.parse(event.data).data
   if (message.chat_id === id.value) {
     messages.value.data.unshift(message)
-    window.scrollTo({ top: messagesWrapper.value?.scrollHeight, behavior: 'smooth' })
   }
 }
 
@@ -65,48 +62,41 @@ socket.onerror = (e) => {
 
 <template>
   <q-page class="chat">
-    <div ref="messagesWrapper" class="chat__messages">
-      <q-chat-message
-        v-for="msg in reverseMessages"
-        :key="msg.id"
-        :sent="msg.user_id === user.id"
-        :bg-color="msg.user_id === user.id ? 'accent' : 'primary'"
-        text-color="white"
-      >
-        <template #stamp>
-          <div class="text-right">
-            {{ formatDate(msg.relevance) }}
+    <div class="chat__messages">
+      <q-infinite-scroll reverse @load="loadMore">
+        <q-chat-message
+          v-for="msg in reverseMessages"
+          :key="msg.id"
+          :sent="msg.user_id === user.id"
+          :bg-color="msg.user_id === user.id ? 'accent' : 'secondary'"
+          text-color="white"
+        >
+          <template #stamp>
+            <div class="text-right">
+              {{ formatDate(msg.relevance) }}
+            </div>
+          </template>
+          <div v-if="msg.content">{{ msg.content }}</div>
+          <div v-if="msg.file">
+            <img
+              v-if="FILE_FORMATS.includes(msg.file.split('.')[1])"
+              height="350px"
+              width="250px"
+              :src="`${FILES_PATH}${msg.file}`"
+            />
+            <a v-else :href="`${FILES_PATH}${msg.file}`" download>{{ msg.file }}</a>
+          </div>
+        </q-chat-message>
+        <template #loading>
+          <div class="row justify-center q-my-md">
+            <q-spinner name="dots" size="40px" />
           </div>
         </template>
-        <div>{{ msg.content }}</div>
-        <div v-if="msg.file">
-          <q-img
-            v-if="FILE_FORMATS.includes(msg.file.split('.')[1])"
-            height="350px"
-            width="250px"
-            :src="`${FILES_PATH}${msg.file}`"
-          />
-          <a v-else :href="`${FILES_PATH}${msg.file}`" download>{{ msg.file }}</a>
-        </div>
-      </q-chat-message>
+      </q-infinite-scroll>
       <q-page-scroller reverse position="bottom-right" :scroll-offset="200" :offset="[15, 25]">
         <q-btn fab icon="keyboard_arrow_down" color="accent" />
       </q-page-scroller>
     </div>
-    <!--    <q-toolbar class="chat__toolbar">-->
-    <!--      <q-input-->
-    <!--        v-model="message"-->
-    <!--        class="chat__input"-->
-    <!--        standout="bg-light-blue-7 text-white"-->
-    <!--        label="Введите сообщение"-->
-    <!--        clearable-->
-    <!--        @keyup.enter="sendMessage"-->
-    <!--      />-->
-    <!--      <label class="cursor-pointer">-->
-    <!--        <q-icon size="25px" name="attachment" class="rotate-135" />-->
-    <!--        <input type="file" hidden @change="onSelectFile($event.target as HTMLInputElement)" />-->
-    <!--      </label>-->
-    <!--    </q-toolbar>-->
   </q-page>
 </template>
 
@@ -124,14 +114,5 @@ socket.onerror = (e) => {
     justify-content: flex-end;
     position: relative;
   }
-
-  //&__toolbar {
-  //  margin-top: 10px;
-  //  gap: 10px;
-  //}
-  //
-  //&__input {
-  //  flex: 1 1 auto;
-  //}
 }
 </style>

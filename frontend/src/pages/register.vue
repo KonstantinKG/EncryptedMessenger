@@ -33,7 +33,7 @@ async function onSubmit() {
       formData.append(key, form[key])
     }
     const { data } = await AuthService.register(formData)
-    $q.cookies.set('id_access', data.id)
+    $q.localStorage.set('id_access', data.id)
     $q.notify({
       message: 'Аккаунт успешно заегестрирован!',
       color: 'primary',
@@ -97,7 +97,7 @@ async function onSubmit() {
         />
       </label>
       <q-avatar class="form__avatar" size="150px">
-        <q-img
+        <img
           v-if="previewAvatar || form.image"
           :src="previewAvatar || form.image"
           alt="Avatar image"

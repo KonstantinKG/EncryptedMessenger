@@ -123,7 +123,7 @@ function nextStep() {
         <label class="cursor-pointer">
           <q-avatar color="primary" text-color="white" size="70px">
             <q-img v-if="previewImage || image" :src="previewImage || image" alt="image" />
-            <q-icon name="photo_camera" />
+            <q-icon v-else name="photo_camera" />
           </q-avatar>
           <input
             accept=".jpg, .jpeg, .png, .svg, .webp, .avif"
@@ -132,14 +132,9 @@ function nextStep() {
             @change="onSelectAvatar($event.target as HTMLInputElement)"
           />
         </label>
-        <q-input
-          v-model="name"
-          filled
-          label="Название чата"
-          :rules="[(val: string) => !!val || 'Обязательное поле']"
-          error-message="Обязательное поле"
-          :error="!isValid"
-        />
+        <q-input v-model="name" filled label="Название чата" />
+        <!--        error-message="Обязательное поле"-->
+        <!--        :error="!isValid"-->
       </div>
       <div v-else class="users scroll" style="max-height: 400px">
         <div class="users__title">

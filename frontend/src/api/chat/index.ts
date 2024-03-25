@@ -38,7 +38,7 @@ class ChatService {
   }
 
   async deleteChat(id: string): PromiseResponse<string> {
-    return await api.delete(`${this.RESOURCE}/delete`, { params: { id } }).then(this.getData)
+    return await api.delete(`${this.RESOURCE}`, { params: { id } }).then(this.getData)
   }
 
   async getAllChatMembers(chat_id: string): PromiseResponse<UserData[]> {
