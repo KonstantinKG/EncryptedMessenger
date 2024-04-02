@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
 import { useChatStore } from 'stores/chat'
 import { storeToRefs } from 'pinia'
-import { useRoute } from 'vue-router'
 
-const props = defineProps<{ file: File }>()
-
-const route = useRoute()
-const id = computed(() => route.params.id as string)
+defineProps<{ file: File }>()
+const emit = defineEmits<{ (e: 'onSend'): void }>()
 
 const store = useChatStore()
 const { message } = storeToRefs(store)
@@ -15,23 +11,16 @@ const { message } = storeToRefs(store)
 const isOpen = defineModel<boolean>('isOpen', { required: true })
 
 async function onSend() {
-  await store.sendMessage(id.value)
+  emit('onSend')
   isOpen.value = false
 }
-
-watch(
-  () => props.file,
-  () => {
-    console.log(props.file)
-  }
-)
 </script>
 
 <template>
   <q-dialog v-model="isOpen">
     <div class="dialog bg-dark">
       <div class="content">
-        {{ file.name }}
+        {{ file?.name }}
       </div>
       <div class="actions">
         <q-input

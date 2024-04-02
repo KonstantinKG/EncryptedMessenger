@@ -10,7 +10,7 @@ import { useChatStore } from 'stores/chat'
 import { useUserStore } from 'stores/user'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { FILES_PATH } from 'src/constants'
 import { AllChatsData } from 'src/api/chat/types'
 import type { UserData } from 'src/api/users/types'
@@ -18,6 +18,7 @@ import ChatService from 'src/api/chat'
 
 const $q = useQuasar()
 const router = useRouter()
+const route = useRoute()
 
 const idAccess = $q.localStorage.getItem('id_access') as string
 if (idAccess) {
@@ -53,10 +54,14 @@ async function searchChats() {
   }
 }
 
-const currentChatIndex = ref(0)
+const currentChatIndex = ref<number | null>(null)
 
 const currentChat = computed(() => {
-  return chats.value.data[currentChatIndex.value]
+  if (route.params.id && currentChatIndex.value === null) {
+    return chats.value.data.find(chat => chat.id === route.params.id)
+  } else {
+    return chats.value.data[currentChatIndex.value]
+  }
 })
 
 function setCurrentChat(index: number) {
@@ -130,7 +135,7 @@ watch(currentChat, (value) => {
 
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header>
+    <q-header v-if="route.params.id">
       <q-toolbar class="bg-main-secondary" style="gap: 10px">
         <q-btn v-if="isMembers" flat icon="chevron_left" to="" @click="isMembers = false" />
         <q-avatar font-size="40px">
@@ -240,7 +245,7 @@ watch(currentChat, (value) => {
             }"
             @click="setCurrentChat(index)"
           >
-            <q-menu touch-position context->
+            <q-menu touch-position context-menu>
               <q-list dense style="min-width: 100px">
                 <q-item clickable @click="deleteChat(chat)">
                   <q-item-section side>удалить чат</q-item-section>
@@ -264,11 +269,14 @@ watch(currentChat, (value) => {
       </q-scroll-area>
     </q-drawer>
 
-    <q-page-container class="bg-main-secondary">
+    <q-page-container>
+      <div v-if="!route.params.id" class="preview">
+        Выберите чат, чтобы начать переписываться
+      </div>
       <router-view />
     </q-page-container>
 
-    <q-footer>
+    <q-footer v-if="route.params.id">
       <q-toolbar class="chat-toolbar bg-secondary">
         <q-input
           v-model="message"
@@ -287,11 +295,19 @@ watch(currentChat, (value) => {
     </q-footer>
   </q-layout>
   <personal-dialog v-model:is-open="isPersonalDialogOpen" />
-  <attachment-dialog v-model:is-open="isAttachmentDialogOpen" :file="file" />
+  <attachment-dialog v-model:is-open="isAttachmentDialogOpen" :file="file" @on-send="onSend" />
   <create-chat-dialog v-model:is-open="isCreateChatDialogOpen" @on-created="fetchChats" />
 </template>
 
 <style scoped lang="scss">
+.preview {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
 .chat-toolbar {
   gap: 10px;
 }
