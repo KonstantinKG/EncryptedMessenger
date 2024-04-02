@@ -21,7 +21,6 @@ const usersData = ref<AllUsersData>({
   total: 0,
   data: []
 })
-const isLoadingUsers = ref(false)
 const step = ref(1)
 const scrollTarget = ref()
 
@@ -79,11 +78,10 @@ async function fetchUsers() {
   }
 }
 
-async function loadMoreUsers() {
-  isLoadingUsers.value = true
+async function loadMoreUsers(index: number, done: (stop?: boolean) => void) {
   page.value++
   await fetchUsers()
-  isLoadingUsers.value = false
+  done(usersData.value.current > usersData.value.pages)
 }
 
 const searchUsersName = ref('')
@@ -157,30 +155,30 @@ function nextStep() {
           />
         </div>
         <q-list ref="scrollTarget">
-          <!--          <q-infinite-scroll :scroll-target="scrollTarget" @load="loadMoreUsers">-->
-          <q-item
-            v-for="user in usersData.data"
-            :key="user.id"
-            v-ripple
-            clickable
-            @click="addMember(user)"
-          >
-            <q-item-section>
-              <q-avatar font-size="40px">
-                <q-img v-if="user.image" :src="`${FILES_PATH}${user.image}`" alt="User avatar" />
-                <person-icon v-else />
-              </q-avatar>
-            </q-item-section>
-            <q-item-section avatar>
-              {{ user.username }}
-            </q-item-section>
-          </q-item>
-          <template #loading>
-            <div class="row justify-center q-my-md">
-              <q-spinner color="primary" size="40px" />
-            </div>
-          </template>
-          <!--          </q-infinite-scroll>-->
+          <q-infinite-scroll @load="loadMoreUsers">
+            <q-item
+              v-for="user in usersData.data"
+              :key="user.id"
+              v-ripple
+              clickable
+              @click="addMember(user)"
+            >
+              <q-item-section>
+                <q-avatar font-size="40px">
+                  <q-img v-if="user.image" :src="`${FILES_PATH}${user.image}`" alt="User avatar" />
+                  <person-icon v-else />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section avatar>
+                {{ user.username }}
+              </q-item-section>
+            </q-item>
+            <template #loading>
+              <div class="row justify-center q-my-md">
+                <q-spinner name="dots" size="40px" />
+              </div>
+            </template>
+          </q-infinite-scroll>
         </q-list>
       </div>
       <div class="actions">

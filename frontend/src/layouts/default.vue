@@ -28,7 +28,7 @@ if (idAccess) {
 const { user } = storeToRefs(useUserStore())
 
 const { sendMessage, searchMessages, deleteChat, fetchChats } = useChatStore()
-const { message, file, searchMessagesName, chats } = storeToRefs(useChatStore())
+const { message, file, searchMessagesName, chats, chatsPage } = storeToRefs(useChatStore())
 const isCreateChatDialogOpen = ref(false)
 const isPersonalDialogOpen = ref(false)
 const searchChatsName = ref('')
@@ -58,7 +58,7 @@ const currentChatIndex = ref<number | null>(null)
 
 const currentChat = computed(() => {
   if (route.params.id && currentChatIndex.value === null) {
-    return chats.value.data.find(chat => chat.id === route.params.id)
+    return chats.value.data.find((chat) => chat.id === route.params.id)
   } else {
     return chats.value.data[currentChatIndex.value]
   }
@@ -128,6 +128,12 @@ const currentMembersLength = computed(() => {
   }
 })
 
+async function loadMoreChats(index: number, done: (stop?: boolean) => void) {
+  chatsPage.value++
+  await fetchChats()
+  done(chats.value.current > chats.value.pages)
+}
+
 watch(currentChat, (value) => {
   if (value) fetchAllMembers(value.id)
 })
@@ -137,51 +143,58 @@ watch(currentChat, (value) => {
   <q-layout view="lHh Lpr lFf">
     <q-header v-if="route.params.id">
       <q-toolbar class="bg-main-secondary" style="gap: 10px">
-        <q-btn v-if="isMembers" flat icon="chevron_left" to="" @click="isMembers = false" />
-        <q-avatar font-size="40px">
-          <img
-            v-if="currentChat?.image"
-            :src="`${FILES_PATH}${currentChat.image}`"
-            alt="Chat avatar"
-          />
-          <person-icon v-else />
-        </q-avatar>
-        <div>
-          <div>{{ currentChat?.name }}</div>
-          <div>{{ currentMembersLength }}</div>
-        </div>
-        <q-input
-          v-model="searchMessagesName"
-          style="flex: 1 1 auto"
-          rounded
-          outlined
-          dense
-          placeholder="Искать по сообщениям"
-          :debounce="300"
-          clearable
-          @clear="searchMessagesName = ''"
-          @keyup.enter="searchMessages(currentChat.id)"
-        >
-          <template #prepend>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-        <!--        <q-btn round flat icon="more_vert">-->
-        <!--          <q-menu auto-close touch-position>-->
-        <!--            <q-list style="min-width: 150px">-->
-        <!--              <q-item-->
-        <!--                clickable-->
-        <!--                :to="{-->
-        <!--                  name: 'Members',-->
-        <!--                  params: { id: currentChat.id }-->
-        <!--                }"-->
-        <!--                @click="isMembers = true"-->
-        <!--              >-->
-        <!--                <q-item-section>Участники</q-item-section>-->
-        <!--              </q-item>-->
-        <!--            </q-list>-->
-        <!--          </q-menu>-->
-        <!--        </q-btn>-->
+        <q-btn
+          v-if="route.name === 'Members'"
+          flat
+          icon="chevron_left"
+          to=""
+          @click="router.back()"
+        />
+        <template v-else>
+          <q-avatar font-size="40px">
+            <img
+              v-if="currentChat?.image"
+              :src="`${FILES_PATH}${currentChat.image}`"
+              alt="Chat avatar"
+            />
+            <person-icon v-else />
+          </q-avatar>
+          <div>
+            <div>{{ currentChat?.name }}</div>
+            <div>{{ currentMembersLength }}</div>
+          </div>
+          <q-input
+            v-model="searchMessagesName"
+            style="flex: 1 1 auto"
+            rounded
+            outlined
+            dense
+            placeholder="Искать по сообщениям"
+            :debounce="300"
+            clearable
+            @clear="searchMessagesName = ''"
+            @keyup.enter="searchMessages(currentChat.id)"
+          >
+            <template #prepend>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+          <q-btn round flat icon="more_vert">
+            <q-menu auto-close touch-position>
+              <q-list style="min-width: 150px">
+                <q-item
+                  clickable
+                  :to="{
+                    name: 'Members',
+                    params: { id: currentChat.id }
+                  }"
+                >
+                  <q-item-section>Участники</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+        </template>
       </q-toolbar>
     </q-header>
     <q-drawer v-model="drawer" :mini="drawerMini" bordered :breakpoint="690">
@@ -234,45 +247,50 @@ watch(currentChat, (value) => {
       </q-toolbar>
       <q-scroll-area style="height: calc(100% - 100px)" class="bg-main">
         <q-list>
-          <q-item
-            v-for="(chat, index) in chats.data"
-            :key="chat.id"
-            clickable
-            active-class="text-white bg-main-dark"
-            :to="{
-              name: 'Chat',
-              params: { id: chat.id }
-            }"
-            @click="setCurrentChat(index)"
-          >
-            <q-menu touch-position context-menu>
-              <q-list dense style="min-width: 100px">
-                <q-item clickable @click="deleteChat(chat)">
-                  <q-item-section side>удалить чат</q-item-section>
-                  <q-item-section thumbnail>
-                    <q-icon color="red" size="xs" name="delete" />
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-            <q-item-section avatar>
-              <q-avatar font-size="40px">
-                <img v-if="chat.image" :src="`${FILES_PATH}${chat.image}`" alt="Chat avatar" />
-                <person-icon v-else />
-              </q-avatar>
-            </q-item-section>
-            <q-item-section>
-              {{ chat.name }}
-            </q-item-section>
-          </q-item>
+          <q-infinite-scroll @load="loadMoreChats">
+            <q-item
+              v-for="(chat, index) in chats.data"
+              :key="chat.id"
+              clickable
+              active-class="text-white bg-main-dark"
+              :to="{
+                name: 'Chat',
+                params: { id: chat.id }
+              }"
+              @click="setCurrentChat(index)"
+            >
+              <q-menu touch-position context-menu>
+                <q-list dense style="min-width: 100px">
+                  <q-item clickable @click="deleteChat(chat)">
+                    <q-item-section side>удалить чат</q-item-section>
+                    <q-item-section thumbnail>
+                      <q-icon color="red" size="xs" name="delete" />
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+              <q-item-section avatar>
+                <q-avatar font-size="40px">
+                  <img v-if="chat.image" :src="`${FILES_PATH}${chat.image}`" alt="Chat avatar" />
+                  <person-icon v-else />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                {{ chat.name }}
+              </q-item-section>
+            </q-item>
+            <template #loading>
+              <div class="row justify-center q-my-md">
+                <q-spinner name="dots" size="40px" />
+              </div>
+            </template>
+          </q-infinite-scroll>
         </q-list>
       </q-scroll-area>
     </q-drawer>
 
     <q-page-container>
-      <div v-if="!route.params.id" class="preview">
-        Выберите чат, чтобы начать переписываться
-      </div>
+      <div v-if="!route.params.id" class="preview">Выберите чат, чтобы начать переписываться</div>
       <router-view />
     </q-page-container>
 

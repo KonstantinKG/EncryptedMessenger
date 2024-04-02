@@ -17,7 +17,7 @@ const { messages } = storeToRefs(useChatStore())
 
 const messagesPage = ref(1)
 
-async function loadMore(index, done) {
+async function loadMore(index: number, done: (stop?: boolean) => void) {
   messagesPage.value++
   await fetchAllMessages(id.value, messagesPage.value)
   done(messages.value.current > messages.value.pages)
