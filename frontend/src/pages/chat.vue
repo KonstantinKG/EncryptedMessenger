@@ -39,12 +39,12 @@ watch(
 const socket = new WebSocket('ws://localhost:8201')
 
 socket.onopen = () => {
-  // socket.send(
-  //   JSON.stringify({
-  //     type: 'listen',
-  //     user_id: user.value.id
-  //   })
-  // )
+  socket.send(
+    JSON.stringify({
+      type: 'listen',
+      user_id: user.value.id
+    })
+  )
 }
 
 socket.onmessage = (event) => {

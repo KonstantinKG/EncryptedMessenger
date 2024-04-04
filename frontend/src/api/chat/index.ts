@@ -30,7 +30,7 @@ class ChatService {
   }
 
   async getChat(chat_id: string): PromiseResponse<ChatData> {
-    return await api.get(`${this.RESOURCE}/get`, { params: { chat_id } }).then(this.getData)
+    return await api.get(`${this.RESOURCE}`, { params: { chat_id } }).then(this.getData)
   }
 
   async updateChat(params: UpdateChat): PromiseResponse<ChatData> {

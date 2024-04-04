@@ -2,6 +2,7 @@
 import CreateChatDialog from 'components/create-chat-dialog.vue'
 import AttachmentDialog from 'components/attachment-dialog.vue'
 import PersonalDialog from 'components/personal-dialog.vue'
+import MembersDialog from 'components/members-dialog.vue'
 import PersonIcon from 'src/icons/person.vue'
 import LogoIcon from 'src/icons/logo.vue'
 import { ref, computed, watch } from 'vue'
@@ -31,6 +32,7 @@ const { sendMessage, searchMessages, deleteChat, fetchChats } = useChatStore()
 const { message, file, searchMessagesName, chats, chatsPage } = storeToRefs(useChatStore())
 const isCreateChatDialogOpen = ref(false)
 const isPersonalDialogOpen = ref(false)
+const isMembersDialogOpen = ref(false)
 const searchChatsName = ref('')
 const searchChatsPage = ref(1)
 const drawer = ref(true)
@@ -129,8 +131,10 @@ const currentMembersLength = computed(() => {
 })
 
 async function loadMoreChats(index: number, done: (stop?: boolean) => void) {
-  chatsPage.value++
-  await fetchChats()
+  if (chats.value.current <= chats.value.pages) {
+    chatsPage.value++
+    await fetchChats()
+  }
   done(chats.value.current > chats.value.pages)
 }
 
@@ -184,10 +188,7 @@ watch(currentChat, (value) => {
               <q-list style="min-width: 150px">
                 <q-item
                   clickable
-                  :to="{
-                    name: 'Members',
-                    params: { id: currentChat.id }
-                  }"
+                  @click="isMembersDialogOpen = true"
                 >
                   <q-item-section>Участники</q-item-section>
                 </q-item>
@@ -314,7 +315,8 @@ watch(currentChat, (value) => {
   </q-layout>
   <personal-dialog v-model:is-open="isPersonalDialogOpen" />
   <attachment-dialog v-model:is-open="isAttachmentDialogOpen" :file="file" @on-send="onSend" />
-  <create-chat-dialog v-model:is-open="isCreateChatDialogOpen" @on-created="fetchChats" />
+  <create-chat-dialog v-model:is-open="isCreateChatDialogOpen" @on-created="fetchChats()" />
+  <members-dialog v-model:is-open="isMembersDialogOpen" />
 </template>
 
 <style scoped lang="scss">
